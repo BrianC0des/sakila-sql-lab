@@ -51,7 +51,7 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
           <a href="#schema-ref" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border border-slate-800 transition">
             4. Schema Ref
           </a>
-          <a href="#local-setup" className="px-2.5 py-1 rounded bg-sky-950/70 hover:bg-sky-900/70 text-cyan-300 hover:text-cyan-200 border border-cyan-700/60 transition font-semibold">
+          <a href="#local-setup" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-800 transition">
             5. XAMPP & CLI Setup
           </a>
         </div>
