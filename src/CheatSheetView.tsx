@@ -11,6 +11,8 @@ import {
   Server,
   Terminal,
   Code2,
+  ExternalLink,
+  Globe,
 } from "lucide-react";
 
 interface SchemaTable {
@@ -41,13 +43,27 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
     <div className="h-full overflow-y-auto bg-slate-950 p-6 space-y-8 text-slate-200">
       {/* Header */}
       <div className="border-b border-slate-800 pb-5">
-        <div className="flex items-center gap-2.5">
-          <BookOpen className="w-5 h-5 text-sky-400" />
-          <h2 className="text-lg font-bold text-slate-100">SQL Mastery & Query Architecture Cheat Sheet</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <BookOpen className="w-5 h-5 text-sky-400" />
+              <h2 className="text-lg font-bold text-slate-100">SQL Mastery & Query Architecture Cheat Sheet</h2>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Active Database: <strong className="text-sky-400 font-mono">{activeDbName}</strong> · High-yield reference of local environment setup, query execution order, common query patterns, and active schema.
+            </p>
+          </div>
+
+          <a
+            href="https://sqlcheatsheetv1.netlify.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-200 border border-sky-700/80 hover:border-sky-500 transition text-xs font-semibold shrink-0 shadow-xs group"
+          >
+            <span>Original Sakila Guide</span>
+            <ExternalLink className="w-3.5 h-3.5 text-sky-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </a>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Active Database: <strong className="text-sky-400 font-mono">{activeDbName}</strong> · High-yield reference of local environment setup, query execution order, common query patterns, and active schema.
-        </p>
 
         {/* Jump Navigation Pills */}
         <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-800/80 text-[11px] font-mono">
@@ -80,6 +96,13 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
             className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border border-slate-800 transition"
           >
             5. Schema Ref
+          </a>
+          <a
+            href="#external-resource"
+            className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-indigo-300 border border-slate-800 transition inline-flex items-center gap-1"
+          >
+            <span>6. Original Cheatsheet</span>
+            <ExternalLink className="w-3 h-3 text-indigo-400" />
           </a>
         </div>
       </div>
@@ -469,6 +492,45 @@ EXIT;                          -- Disconnect from MySQL CLI`}
             )}
           </div>
         )}
+      </div>
+
+      {/* 6. Original Sakila Cheatsheet Reference */}
+      <div id="external-resource" className="space-y-3 pb-8 border-t border-slate-800/80 pt-6 scroll-mt-6">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-indigo-400" />
+          <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
+            6. Extended Sakila SQL Documentation & Live Coursework Link
+          </h3>
+        </div>
+
+        <div className="p-4 rounded-xl border border-indigo-900/50 bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-sky-950/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <h4 className="text-xs font-bold text-indigo-300">
+              Original Sakila SQL Cheatsheet (Companion Guide)
+            </h4>
+            <p className="text-[11px] text-slate-300 leading-relaxed max-w-xl">
+              Need deeper explanations, original ER diagrams, or expanded query walkthroughs? Visit the original companion reference cheatsheet created for this curriculum at{" "}
+              <a
+                href="https://sqlcheatsheetv1.netlify.app/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-400 hover:underline font-mono"
+              >
+                sqlcheatsheetv1.netlify.app
+              </a>.
+            </p>
+          </div>
+
+          <a
+            href="https://sqlcheatsheetv1.netlify.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition text-xs font-semibold shrink-0 shadow-sm"
+          >
+            <span>Open Original Cheatsheet</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
     </div>
   );
