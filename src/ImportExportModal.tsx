@@ -73,7 +73,6 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   }>({ success: null });
 
   const [promptCount, setPromptCount] = useState<number>(10);
-  const [promptTopic, setPromptTopic] = useState<"balanced" | "basics" | "aggregations" | "joins" | "advanced">("balanced");
   const [promptClarity, setPromptClarity] = useState<"crystal-clear" | "balanced" | "exploratory">("crystal-clear");
   const [promptCustomTags, setPromptCustomTags] = useState<string>("joins, aggregates, filtering");
   const [selectedExportTable, setSelectedExportTable] = useState<string>("");
@@ -100,13 +99,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       ? schemaTables.map(t => `- ${t.name} (${t.columns.join(", ")})`).join("\n")
       : "- film (film_id, title, rental_rate, length, rating)\n- category (category_id, name)\n- film_category (film_id, category_id)\n- actor (actor_id, first_name, last_name)\n- customer (customer_id, first_name, last_name, email, active)\n- rental (rental_id, rental_date, film_id, customer_id, return_date)\n- payment (payment_id, customer_id, rental_id, amount, payment_date)";
 
-    const topicDescriptions: Record<string, string> = {
-      balanced: `Balanced curriculum: ~30% Beginner (SELECT, WHERE, ORDER BY, LIMIT), ~40% Intermediate (GROUP BY, HAVING, single JOIN), ~30% Advanced (Multi-table JOINs, subqueries, CASE WHEN).`,
-      basics: `Focus on SQL foundations: SELECT specific columns, column aliases, WHERE operators (=, !=, <, >, LIKE, IN, BETWEEN), ORDER BY, LIMIT and OFFSET.`,
-      aggregations: `Focus on grouping & aggregations: COUNT, SUM, AVG, MIN, MAX, GROUP BY multiple columns, HAVING filters on aggregate totals.`,
-      joins: `Focus on relational JOINs: INNER JOIN, LEFT JOIN, multi-table joins (2-4 tables), self-joins, and join condition ON clauses.`,
-      advanced: `Focus on advanced SQL patterns: Subqueries (scalar & IN/EXISTS), CASE WHEN conditional columns, DATE functions, and complex analytical queries.`
-    };
+    const topicInstruction = promptCustomTags.trim()
+      ? `Focus specifically on challenges covering these topic concepts and tags: ${promptCustomTags.trim()}`
+      : `Balanced curriculum: Cover a well-rounded mix of foundations (SELECT, WHERE, LIMIT), aggregations (GROUP BY, HAVING), relational JOINs (INNER, LEFT), and subqueries.`;
 
     const clarityDescriptions: Record<string, string> = {
       "crystal-clear": `Highest Clarity (Explicit Specifications):
@@ -129,9 +124,8 @@ Generate a batch of exactly ${promptCount} hands-on practice SQL questions for t
 ### ACTIVE DATABASE SCHEMA (${activeDbName}):
 ${tableListStr}
 
-### TOPIC FOCUS:
-${topicDescriptions[promptTopic]}
-${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : ""}
+### TOPICS & FOCUS CONCEPTS:
+${topicInstruction}
 
 ### PROBLEM CLARITY & GUIDANCE STYLE:
 ${clarityDescriptions[promptClarity]}
@@ -974,15 +968,15 @@ ${clarityDescriptions[promptClarity]}
           {/* TAB 4: AI Prompt Generator */}
           {activeTab === "prompt" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                <div className="flex flex-col justify-end h-full">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1.5 h-4 leading-4 truncate" title="Batch Size (Questions)">
                     Batch Size (Questions)
                   </label>
                   <select
                     value={promptCount}
                     onChange={(e) => setPromptCount(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
+                    className="w-full h-8 bg-slate-900 border border-slate-700 rounded px-2 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
                   >
                     <option value={5}>5 Questions (Quick Review)</option>
                     <option value={10}>10 Questions (Standard Quiz)</option>
@@ -991,32 +985,15 @@ ${clarityDescriptions[promptClarity]}
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                    Topic Focus
-                  </label>
-                  <select
-                    value={promptTopic}
-                    onChange={(e) => setPromptTopic(e.target.value as any)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
-                  >
-                    <option value="balanced">Balanced Progression (Beginner → Adv)</option>
-                    <option value="basics">Foundations (SELECT, WHERE, LIMIT)</option>
-                    <option value="aggregations">Aggregations (GROUP BY, HAVING, COUNT)</option>
-                    <option value="joins">Relational JOINs (INNER, LEFT, Multi-table)</option>
-                    <option value="advanced">Advanced (Subqueries, CASE WHEN, DATE)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                <div className="flex flex-col justify-end h-full">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1.5 h-4 leading-4 truncate" title="Problem Clarity & Guidance">
                     Problem Clarity & Guidance
                   </label>
                   <select
                     data-test="prompt-clarity-select"
                     value={promptClarity}
                     onChange={(e) => setPromptClarity(e.target.value as any)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
+                    className="w-full h-8 bg-slate-900 border border-slate-700 rounded px-2 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
                   >
                     <option value="crystal-clear">Crystal Clear (Explicit Specs & Aliases)</option>
                     <option value="balanced">Balanced (Scenario + Clear Goals)</option>
@@ -1024,18 +1001,43 @@ ${clarityDescriptions[promptClarity]}
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                    Target Tags (Comma separated)
+                <div className="flex flex-col justify-end h-full">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1.5 h-4 leading-4 truncate" title="Topic Tags (comma-separated or click presets below)">
+                    Topic Tags (Flexible Topics)
                   </label>
                   <input
                     type="text"
                     value={promptCustomTags}
                     onChange={(e) => setPromptCustomTags(e.target.value)}
-                    placeholder="e.g. joins, subqueries, null"
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 font-mono"
+                    placeholder="e.g. joins, subqueries, group-by"
+                    className="w-full h-8 bg-slate-900 border border-slate-700 rounded px-2.5 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 font-mono"
                   />
                 </div>
+              </div>
+
+              {/* Quick Topic Preset Chips for Maximum Flexibility */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <span className="text-[10px] text-slate-400 font-medium mr-1">Topic Presets:</span>
+                {[
+                  { label: "Balanced", tags: "joins, aggregates, filtering, subqueries" },
+                  { label: "Foundations", tags: "select, where, operators, order-by, limit" },
+                  { label: "Aggregations", tags: "group-by, having, count, sum, avg" },
+                  { label: "Relational JOINs", tags: "inner-join, left-join, multi-table" },
+                  { label: "Advanced", tags: "subqueries, case-when, date-time, self-join" },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setPromptCustomTags(preset.tags)}
+                    className={`text-[10px] px-2 py-0.5 rounded transition cursor-pointer font-sans border ${
+                      promptCustomTags === preset.tags
+                        ? "bg-sky-950 text-sky-200 border-sky-600 font-semibold"
+                        : "bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
 
               <div className="flex items-center justify-between">
