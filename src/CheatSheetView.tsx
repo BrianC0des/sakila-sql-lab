@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BookOpen, AlertTriangle, ArrowRight, Layers, Database, Sparkles, Copy, Check } from "lucide-react";
+import { BookOpen, AlertTriangle, ArrowRight, Layers, Database, Sparkles, Copy, Check, Server, Terminal, Code2 } from "lucide-react";
 
 interface SchemaTable {
   name: string;
@@ -34,12 +34,31 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
           <h2 className="text-lg font-bold text-slate-100">SQL Mastery & Query Architecture Cheat Sheet</h2>
         </div>
         <p className="text-xs text-slate-400 mt-1">
-          Active Database: <strong className="text-sky-400 font-mono">{activeDbName}</strong> · High-yield reference of query execution order, common query patterns, and active schema.
+          Active Database: <strong className="text-sky-400 font-mono">{activeDbName}</strong> · High-yield reference of query execution order, common query patterns, local XAMPP/MySQL CLI setup, and active schema.
         </p>
+
+        {/* Jump Navigation Pills */}
+        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-800/80 text-[11px] font-mono">
+          <a href="#execution-order" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-sky-300 border border-slate-800 transition">
+            1. Execution Order
+          </a>
+          <a href="#exam-traps" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-rose-300 border border-slate-800 transition">
+            2. Exam Traps
+          </a>
+          <a href="#query-patterns" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-amber-300 border border-slate-800 transition">
+            3. Query Shapes
+          </a>
+          <a href="#schema-ref" className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border border-slate-800 transition">
+            4. Schema Ref
+          </a>
+          <a href="#local-setup" className="px-2.5 py-1 rounded bg-sky-950/70 hover:bg-sky-900/70 text-cyan-300 hover:text-cyan-200 border border-cyan-700/60 transition font-semibold">
+            5. XAMPP & CLI Setup
+          </a>
+        </div>
       </div>
 
       {/* 1. Conceptual Execution Order */}
-      <div className="space-y-3">
+      <div id="execution-order" className="space-y-3 scroll-mt-6">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-amber-400" />
           <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
@@ -75,7 +94,7 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
       </div>
 
       {/* 2. Classic Exam Traps */}
-      <div className="space-y-3">
+      <div id="exam-traps" className="space-y-3 scroll-mt-6">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-rose-400" />
           <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
@@ -119,7 +138,7 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
       </div>
 
       {/* 3. The 7 Core Query Patterns */}
-      <div className="space-y-3">
+      <div id="query-patterns" className="space-y-3 scroll-mt-6">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-sky-400" />
           <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
@@ -192,7 +211,7 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
       </div>
 
       {/* 4. Active Database Schema Keys Reference */}
-      <div className="space-y-3 pb-6">
+      <div id="schema-ref" className="space-y-3 scroll-mt-6">
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4 text-emerald-400" />
           <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
@@ -244,6 +263,185 @@ export const CheatSheetView: React.FC<CheatSheetViewProps> = ({
             )}
           </div>
         )}
+      </div>
+
+      {/* 5. Local Dev Environment: XAMPP, MySQL CLI, & Editor Setup */}
+      <div id="local-setup" className="space-y-4 pb-8 border-t border-slate-800/80 pt-6 scroll-mt-6">
+        <div className="flex items-center gap-2">
+          <Server className="w-4 h-4 text-cyan-400" />
+          <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wide">
+            5. Local Dev Environment: XAMPP, MySQL CLI, & Editor Setup
+          </h3>
+        </div>
+        <p className="text-xs text-slate-400">
+          Step-by-step guide to running MySQL locally with XAMPP, managing databases from Command Prompt (CMD) or Terminal, and configuring code editor extensions.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          {/* Step 1: Starting XAMPP */}
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-900/60 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                <Server className="w-3.5 h-3.5" />
+                Step 1: Start XAMPP & MySQL Server
+              </span>
+            </div>
+            <ul className="text-[11px] text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+              <li>
+                Open the <strong>XAMPP Control Panel</strong> (run as administrator if prompted).
+              </li>
+              <li>
+                Click <strong className="text-emerald-400">Start</strong> next to <strong>Apache</strong> and <strong>MySQL</strong>.
+              </li>
+              <li>
+                Verify status: MySQL turns <strong className="text-emerald-400">green</strong> with Port <code className="text-sky-300 font-mono">3306</code>.
+              </li>
+              <li>
+                Web GUI: Open your browser and go to{" "}
+                <a
+                  href="http://localhost/phpmyadmin"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sky-400 hover:underline font-mono"
+                >
+                  http://localhost/phpmyadmin
+                </a>{" "}
+                for point-and-click database and table management.
+              </li>
+            </ul>
+          </div>
+
+          {/* Step 2: Open in CMD / Terminal */}
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-900/60 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                <Terminal className="w-3.5 h-3.5" />
+                Step 2: Connect via CMD / Terminal
+              </span>
+              <button
+                onClick={() =>
+                  copySnippet(
+                    "cmd-login",
+                    "cd C:\\xampp\\mysql\\bin\nmysql -u root -p"
+                  )
+                }
+                className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 transition font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700"
+              >
+                {copiedSection === "cmd-login" ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+                {copiedSection === "cmd-login" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="text-xs font-mono bg-slate-950 p-2.5 rounded border border-slate-850 text-slate-300 overflow-x-auto">
+{`# 1. Windows default binary directory
+cd C:\\xampp\\mysql\\bin
+
+# Linux / macOS (LAMPP default)
+# cd /opt/lampp/bin
+
+# 2. Connect as root user
+mysql -u root -p`}
+            </pre>
+            <p className="text-[10px] text-slate-400 leading-normal">
+              <strong>Password Tip:</strong> Default XAMPP root user has <em>no password</em>. When prompted with <code className="text-amber-300 font-mono">Enter password:</code>, just press <kbd className="bg-slate-800 px-1.5 py-0.5 rounded text-sky-300 font-mono">Enter</kbd>.
+            </p>
+          </div>
+
+          {/* Step 3: Core Database Management Commands */}
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-900/60 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5" />
+                Step 3: Core CLI Management Commands
+              </span>
+              <button
+                onClick={() =>
+                  copySnippet(
+                    "cmd-crud",
+                    "SHOW DATABASES;\nCREATE DATABASE school_db;\nUSE school_db;\nSHOW TABLES;\nDESCRIBE students;\nSOURCE C:/path/to/seed.sql;\nEXIT;"
+                  )
+                }
+                className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-200 transition font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700"
+              >
+                {copiedSection === "cmd-crud" ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+                {copiedSection === "cmd-crud" ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <pre className="text-xs font-mono bg-slate-950 p-2.5 rounded border border-slate-850 text-slate-300 overflow-x-auto">
+{`SHOW DATABASES;                -- List all existing databases
+CREATE DATABASE my_db;         -- Create a new database
+USE my_db;                     -- Switch into target database
+SHOW TABLES;                   -- List tables in active DB
+DESCRIBE table_name;           -- View columns & data types
+SOURCE C:/path/to/script.sql;  -- Execute SQL file dump
+EXIT;                          -- Disconnect from MySQL CLI`}
+            </pre>
+          </div>
+
+          {/* Step 4: Editor & Extension Setup */}
+          <div className="p-4 rounded-lg border border-slate-800 bg-slate-900/60 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-violet-300 flex items-center gap-1.5">
+                <Code2 className="w-3.5 h-3.5" />
+                Step 4: Editor & Extension Setup
+              </span>
+            </div>
+            <ul className="text-[11px] text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+              <li>
+                <strong>VS Code Recommended Extensions</strong>:
+                <ul className="pl-4 list-circle space-y-1 text-slate-400 mt-1">
+                  <li>
+                    <span className="text-sky-300 font-semibold">SQLTools</span> +{" "}
+                    <span className="text-sky-300">SQLTools MySQL/MariaDB Driver</span>
+                  </li>
+                  <li>
+                    <span className="text-sky-300 font-semibold">Database Client (JDBC)</span> by cweijan
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Connection Credentials for Localhost</strong>:
+                <div className="grid grid-cols-2 gap-2 mt-1.5 font-mono text-[10px] bg-slate-950 p-2.5 rounded border border-slate-850">
+                  <div>Host: <span className="text-sky-300">localhost</span> (127.0.0.1)</div>
+                  <div>Port: <span className="text-sky-300">3306</span></div>
+                  <div>Username: <span className="text-sky-300">root</span></div>
+                  <div>Password: <span className="text-slate-500">(leave blank)</span></div>
+                </div>
+              </li>
+              <li>
+                <strong>Standalone GUI Tools</strong>: If you prefer a desktop GUI instead of an editor extension, install <strong>DBeaver Community</strong> (free & open source) or <strong>MySQL Workbench</strong>.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bonus: SQLite vs MySQL CLI Reference */}
+        <div className="p-3.5 rounded-lg border border-slate-800 bg-slate-900/40 text-[11px] font-mono">
+          <span className="font-bold text-sky-400 block mb-1.5">CLI Quick Translation: SQLite vs MySQL</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] text-slate-300">
+            <div className="bg-slate-950 p-2 rounded border border-slate-850">
+              <strong className="text-amber-400 block mb-1">SQLite CLI:</strong>
+              <div>Start: <code className="text-slate-400">sqlite3 mydb.sqlite</code></div>
+              <div>List Tables: <code className="text-slate-400">.tables</code></div>
+              <div>Table Schema: <code className="text-slate-400">.schema table_name</code></div>
+              <div>Quit: <code className="text-slate-400">.exit</code> or <code className="text-slate-400">.quit</code></div>
+            </div>
+            <div className="bg-slate-950 p-2 rounded border border-slate-850">
+              <strong className="text-cyan-400 block mb-1">MySQL CLI (XAMPP):</strong>
+              <div>Start: <code className="text-slate-400">mysql -u root -p</code></div>
+              <div>List Tables: <code className="text-slate-400">SHOW TABLES;</code></div>
+              <div>Table Schema: <code className="text-slate-400">DESCRIBE table_name;</code></div>
+              <div>Quit: <code className="text-slate-400">EXIT;</code> or <code className="text-slate-400">QUIT;</code></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

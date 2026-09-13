@@ -53,7 +53,7 @@ const TOUR_STEPS: TourStep[] = [
     targetSelector: "[data-tour='cheatsheet-tab']",
     title: "5. Query Architecture Cheat Sheet",
     description:
-      "Switch here to review the 7-step conceptual query execution order (FROM → WHERE → GROUP BY → ...), 5 common exam traps, 7 query shapes, and a live schema reference of the active database.",
+      "Switch here to review the 7-step conceptual query execution order (FROM → WHERE → GROUP BY → ...), 5 common exam traps, 7 query shapes, local XAMPP & MySQL CLI setup guide, and active schema reference.",
     icon: <BookOpen className="w-5 h-5 text-amber-400" />,
     placement: "bottom"
   },
