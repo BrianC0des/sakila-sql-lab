@@ -467,9 +467,14 @@ ${clarityDescriptions[promptClarity]}
             title,
             description: item.description || "",
             difficulty: item.difficulty || "intermediate",
-            tags: Array.isArray(item.tags) && item.tags.length > 0
-              ? item.tags.map((t: any) => String(t).toLowerCase().trim())
-              : [(item.difficulty || "custom").toLowerCase()],
+            tags: Array.from(
+              new Set([
+                ...(Array.isArray(item.tags) && item.tags.length > 0
+                  ? item.tags.map((t: any) => String(t).toLowerCase().trim())
+                  : [(item.difficulty || "intermediate").toLowerCase()]),
+                "custom",
+              ])
+            ),
             requireOrder: item.requireOrder ?? true,
             hints: Array.isArray(item.hints) ? item.hints : [],
             starterQuery: "",

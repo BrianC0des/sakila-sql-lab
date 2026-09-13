@@ -67,7 +67,15 @@ export const SqlApp: React.FC = () => {
   const [customChallenges, setCustomChallenges] = useState<SqlChallenge[]>(() => {
     try {
       const saved = localStorage.getItem("sakila_custom_challenges");
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed: SqlChallenge[] = JSON.parse(saved);
+        return parsed.map((c) => ({
+          ...c,
+          isCustom: true,
+          tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+        }));
+      }
+      return [];
     } catch {
       return [];
     }
@@ -78,10 +86,28 @@ export const SqlApp: React.FC = () => {
     try {
       const saved = localStorage.getItem(`sql_custom_${dbKey}`);
       if (saved) {
-        setCustomChallenges(JSON.parse(saved));
+        const parsed: SqlChallenge[] = JSON.parse(saved);
+        setCustomChallenges(
+          parsed.map((c) => ({
+            ...c,
+            isCustom: true,
+            tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+          }))
+        );
       } else if (isDefaultSakila) {
         const legacy = localStorage.getItem("sakila_custom_challenges");
-        setCustomChallenges(legacy ? JSON.parse(legacy) : []);
+        if (legacy) {
+          const parsed: SqlChallenge[] = JSON.parse(legacy);
+          setCustomChallenges(
+            parsed.map((c) => ({
+              ...c,
+              isCustom: true,
+              tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+            }))
+          );
+        } else {
+          setCustomChallenges([]);
+        }
       } else {
         setCustomChallenges([]);
       }
@@ -102,6 +128,26 @@ export const SqlApp: React.FC = () => {
     }
     return customChallenges.length > 0 ? customChallenges : explorationMilestones;
   }, [isDefaultSakila, customChallenges, explorationMilestones]);
+
+  const customChallengeIds = useMemo(() => new Set(customChallenges.map((c) => c.id)), [customChallenges]);
+
+  const sidebarMilestones: LabMilestone[] = useMemo(() => {
+    return allChallenges.map((c) => {
+      const isCustom = Boolean(c.isCustom || customChallengeIds.has(c.id));
+      const tags = c.tags ? [...c.tags] : [];
+      if (isCustom && !tags.some((t) => t.toLowerCase() === "custom")) {
+        tags.push("custom");
+      }
+      return {
+        id: c.id,
+        title: c.title,
+        category: c.difficulty,
+        difficulty: c.difficulty,
+        tags,
+        isCustom,
+      };
+    });
+  }, [allChallenges, customChallengeIds]);
 
   const [userQuery, setUserQuery] = useState(allChallenges[0]?.starterQuery || "");
   const [userRows, setUserRows] = useState<Record<string, any>[]>([]);
@@ -509,7 +555,12 @@ export const SqlApp: React.FC = () => {
   const handleImportChallenges = (newChallenges: SqlChallenge[]) => {
     setCustomChallenges((prev) => {
       const existingIds = new Set(prev.map((c) => c.id));
-      const filtered = newChallenges.filter((c) => !existingIds.has(c.id));
+      const taggedNew = newChallenges.map((c) => ({
+        ...c,
+        isCustom: true,
+        tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+      }));
+      const filtered = taggedNew.filter((c) => !existingIds.has(c.id));
       return [...prev, ...filtered];
     });
   };
@@ -662,12 +713,7 @@ export const SqlApp: React.FC = () => {
             <LabSidebar
               title="SQL Studio"
               subtitle={`${dbName} · ${allChallenges.length} Milestones`}
-              milestones={allChallenges.map((c) => ({
-                id: c.id,
-                title: c.title,
-                category: c.difficulty,
-                tags: c.tags,
-              }))}
+              milestones={sidebarMilestones}
               currentIndex={currentIdx}
               completedIds={completedMilestones}
               onSelect={handleSelectChallenge}
@@ -842,9 +888,10 @@ export const SqlApp: React.FC = () => {
                       <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                         {activeChallenge.difficulty}
                       </span>
-                      {activeChallenge.isCustom && (
-                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700">
-                          Custom
+                      {(activeChallenge.isCustom || customChallengeIds.has(activeChallenge.id)) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700 shadow-xs">
+                          <span>★</span>
+                          <span>Custom Question</span>
                         </span>
                       )}
                       {completedMilestones.includes(activeChallenge.id) && (
@@ -856,11 +903,11 @@ export const SqlApp: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {activeChallenge.isCustom && (
+                      {(activeChallenge.isCustom || customChallengeIds.has(activeChallenge.id)) && (
                         <button
                           onClick={() => handleDeleteChallenge(activeChallenge.id)}
                           title="Delete this custom question"
-                          className="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded bg-rose-950/40 border border-rose-850 transition"
+                          className="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded bg-rose-950/40 border border-rose-850 transition cursor-pointer"
                         >
                           <Trash2 className="w-3 h-3" />
                           Delete Question
@@ -870,7 +917,7 @@ export const SqlApp: React.FC = () => {
                       {activeChallenge.hints && activeChallenge.hints.length > 0 && (
                         <button
                           onClick={() => setShowHints(!showHints)}
-                          className="inline-flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200 px-2.5 py-0.5 rounded bg-amber-950/40 border border-amber-800/60 transition"
+                          className="inline-flex items-center gap-1 text-xs text-amber-300 hover:text-amber-200 px-2.5 py-0.5 rounded bg-amber-950/40 border border-amber-800/60 transition cursor-pointer"
                         >
                           <HelpCircle className="w-3.5 h-3.5" />
                           <span>{showHints ? "Hide Hints" : `Hints (${activeChallenge.hints.length})`}</span>
@@ -887,34 +934,46 @@ export const SqlApp: React.FC = () => {
                   </p>
 
                   {/* Interactive Topic Tags */}
-                  {activeChallenge.tags && activeChallenge.tags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-slate-800/60">
-                      <span className="text-[10px] text-slate-500 font-mono">Topics:</span>
-                      {activeChallenge.tags.map((t) => {
-                        const isTagSelected = activeTags.includes(t.toLowerCase());
-                        return (
-                          <button
-                            key={t}
-                            onClick={() => {
-                              setActiveTags((prev) =>
-                                prev.includes(t.toLowerCase())
-                                  ? prev.filter((tag) => tag !== t.toLowerCase())
-                                  : [...prev, t.toLowerCase()]
-                              );
-                            }}
-                            title={`Toggle filter for topic #${t}`}
-                            className={`text-[10px] font-mono px-2 py-0.5 rounded transition cursor-pointer ${
-                              isTagSelected
-                                ? "bg-purple-900 text-purple-200 border border-purple-500 font-bold"
-                                : "bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700"
-                            }`}
-                          >
-                            #{t}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                  {(() => {
+                    const isCustomQ = Boolean(activeChallenge.isCustom || customChallengeIds.has(activeChallenge.id));
+                    const challengeTags = activeChallenge.tags ? [...activeChallenge.tags] : [];
+                    if (isCustomQ && !challengeTags.some((t) => t.toLowerCase() === "custom")) {
+                      challengeTags.push("custom");
+                    }
+                    if (challengeTags.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-slate-800/60">
+                        <span className="text-[10px] text-slate-500 font-mono">Topics:</span>
+                        {challengeTags.map((t) => {
+                          const isTagSelected = activeTags.includes(t.toLowerCase());
+                          const isCustomTag = t.toLowerCase() === "custom";
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => {
+                                setActiveTags((prev) =>
+                                  prev.includes(t.toLowerCase())
+                                    ? prev.filter((tag) => tag !== t.toLowerCase())
+                                    : [...prev, t.toLowerCase()]
+                                );
+                              }}
+                              title={`Toggle filter for topic #${t}`}
+                              className={`text-[10px] font-mono px-2 py-0.5 rounded transition cursor-pointer flex items-center gap-1 ${
+                                isTagSelected
+                                  ? "bg-purple-900 text-purple-200 border border-purple-500 font-bold shadow-xs"
+                                  : isCustomTag
+                                  ? "bg-purple-950/80 text-purple-300 border border-purple-800/80 hover:bg-purple-900/60 font-semibold"
+                                  : "bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                              }`}
+                            >
+                              {isCustomTag && <span>★</span>}
+                              <span>#{t}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                   {/* Inline Collapsible Hints */}
                   {showHints && activeChallenge.hints && activeChallenge.hints.length > 0 && (
@@ -1108,12 +1167,7 @@ export const SqlApp: React.FC = () => {
             <LabSidebar
               title="SQL Studio"
               subtitle={`${dbName} · ${allChallenges.length} Milestones`}
-              milestones={allChallenges.map((c) => ({
-                id: c.id,
-                title: c.title,
-                category: c.difficulty,
-                tags: c.tags,
-              }))}
+              milestones={sidebarMilestones}
               currentIndex={currentIdx}
               completedIds={completedMilestones}
               onSelect={(idx) => {
