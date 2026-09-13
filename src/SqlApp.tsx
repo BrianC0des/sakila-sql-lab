@@ -28,6 +28,11 @@ import {
   ChevronDown,
   Menu,
   PanelLeft,
+  Zap,
+  Terminal,
+  BookOpen,
+  Lightbulb,
+  Check,
 } from "lucide-react";
 import { SqlCodeEditor } from "./SqlCodeEditor";
 
@@ -521,31 +526,33 @@ export const SqlApp: React.FC = () => {
                 )}
 
                 <span className="font-bold text-sm tracking-tight text-sky-400 flex items-center gap-1.5 shrink-0">
-                  <span className="text-amber-400">⚡</span> SQL Studio
+                  <Zap className="w-4 h-4 text-amber-400 fill-amber-400/20" /> SQL Studio
                 </span>
 
                 {/* Mode Tabs (Lab & Cheat Sheet Only) */}
                 <div className="flex rounded overflow-hidden border border-slate-700 font-medium">
                   <button
                     onClick={() => setAppMode("lab")}
-                    className={`text-xs px-3 py-1 transition ${
+                    className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 transition ${
                       appMode === "lab"
                         ? "bg-slate-700 text-slate-100 font-bold"
                         : "bg-slate-900 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    💻 Lab
+                    <Terminal className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Lab</span>
                   </button>
                   <button
                     data-tour="cheatsheet-tab"
                     onClick={() => setAppMode("cheatsheet")}
-                    className={`text-xs px-3 py-1 transition border-l border-slate-700 ${
+                    className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 transition border-l border-slate-700 ${
                       appMode === "cheatsheet"
                         ? "bg-slate-700 text-slate-100 font-bold"
                         : "bg-slate-900 text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    📖 Cheat Sheet
+                    <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Cheat Sheet</span>
                   </button>
                 </div>
               </div>
@@ -647,8 +654,9 @@ export const SqlApp: React.FC = () => {
                         </span>
                       )}
                       {completedMilestones.includes(activeChallenge.id) && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-700 text-emerald-300">
-                          ✓ Passed
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-700 text-emerald-300">
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span>Passed</span>
                         </span>
                       )}
                     </div>
@@ -687,7 +695,10 @@ export const SqlApp: React.FC = () => {
                   {/* Inline Collapsible Hints */}
                   {showHints && activeChallenge.hints && activeChallenge.hints.length > 0 && (
                     <div className="mt-2.5 p-3 rounded-lg bg-amber-950/30 border border-amber-850 space-y-1.5 text-xs">
-                      <div className="font-semibold text-amber-300 text-[11px]">💡 Hints:</div>
+                      <div className="font-semibold text-amber-300 text-[11px] flex items-center gap-1.5">
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Hints:</span>
+                      </div>
                       {activeChallenge.hints.map((hint, hIdx) => (
                         <div key={hIdx} className="text-slate-300 flex items-start gap-1.5 leading-relaxed text-[11px]">
                           <span className="text-amber-400 font-bold">{hIdx + 1}.</span>

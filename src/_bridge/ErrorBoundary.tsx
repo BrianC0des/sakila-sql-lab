@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -33,7 +34,8 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="p-6 rounded-lg bg-red-950/40 border border-red-500/50 text-red-200">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-bold text-red-400 flex items-center gap-2">
-              ⚠️ Live Component Crash Detected
+              <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+              <span>Live Component Crash Detected</span>
             </h3>
             <button
               onClick={this.reset}

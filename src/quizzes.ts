@@ -23,7 +23,7 @@ export interface QuizBatch {
 const batch_select_from: QuizBatch = {
   id: "quiz-select-from",
   title: "SELECT & FROM Basics",
-  icon: "🎯",
+  icon: "target",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Test your understanding of choosing columns and tables.",
@@ -85,7 +85,7 @@ const batch_select_from: QuizBatch = {
 const batch_where: QuizBatch = {
   id: "quiz-where",
   title: "WHERE & Comparison Operators",
-  icon: "🔍",
+  icon: "search",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Practice filtering rows with conditions and operators.",
@@ -152,7 +152,7 @@ const batch_where: QuizBatch = {
 const batch_logical: QuizBatch = {
   id: "quiz-logical",
   title: "AND, OR & NOT",
-  icon: "🧠",
+  icon: "brain",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Combine multiple conditions with logical operators.",
@@ -214,7 +214,7 @@ const batch_logical: QuizBatch = {
 const batch_in_between: QuizBatch = {
   id: "quiz-in-between",
   title: "IN, BETWEEN & DISTINCT",
-  icon: "📋",
+  icon: "clipboard",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Range filters, list matching, and deduplication.",
@@ -286,7 +286,7 @@ const batch_in_between: QuizBatch = {
 const batch_null: QuizBatch = {
   id: "quiz-null",
   title: "NULL Values",
-  icon: "⚠️",
+  icon: "alert",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Understanding and handling NULL — SQL's 'no value' concept.",
@@ -358,7 +358,7 @@ const batch_null: QuizBatch = {
 const batch_like: QuizBatch = {
   id: "quiz-like",
   title: "LIKE & Wildcards",
-  icon: "🔤",
+  icon: "type",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Pattern matching with % and _ wildcards.",
@@ -420,7 +420,7 @@ const batch_like: QuizBatch = {
 const batch_order_limit: QuizBatch = {
   id: "quiz-order-limit",
   title: "ORDER BY, LIMIT & OFFSET",
-  icon: "📊",
+  icon: "chart",
   topic: "Retrieve Data",
   difficulty: "beginner",
   description: "Sorting results and paginating output.",
@@ -487,7 +487,7 @@ const batch_order_limit: QuizBatch = {
 const batch_aggregates: QuizBatch = {
   id: "quiz-aggregates",
   title: "Aggregate Functions",
-  icon: "🔢",
+  icon: "hash",
   topic: "Analyze Data",
   difficulty: "beginner",
   description: "COUNT, SUM, AVG, MIN, MAX — summarizing data.",
@@ -554,7 +554,7 @@ const batch_aggregates: QuizBatch = {
 const batch_group_by: QuizBatch = {
   id: "quiz-group-by",
   title: "GROUP BY",
-  icon: "📦",
+  icon: "package",
   topic: "Analyze Data",
   difficulty: "intermediate",
   description: "Grouping rows to calculate aggregates per category.",
@@ -626,7 +626,7 @@ const batch_group_by: QuizBatch = {
 const batch_having: QuizBatch = {
   id: "quiz-having",
   title: "HAVING vs WHERE",
-  icon: "🧪",
+  icon: "flask",
   topic: "Analyze Data",
   difficulty: "intermediate",
   description: "Filter groups after aggregation using HAVING.",
@@ -698,7 +698,7 @@ const batch_having: QuizBatch = {
 const batch_case: QuizBatch = {
   id: "quiz-case",
   title: "CASE WHEN",
-  icon: "🔀",
+  icon: "shuffle",
   topic: "Analyze Data",
   difficulty: "intermediate",
   description: "SQL's if/else conditional logic inside queries.",
@@ -760,7 +760,7 @@ const batch_case: QuizBatch = {
 const batch_inner_join: QuizBatch = {
   id: "quiz-inner-join",
   title: "INNER JOIN",
-  icon: "🔗",
+  icon: "link",
   topic: "Connect Data",
   difficulty: "intermediate",
   description: "Combining data from multiple related tables.",
@@ -832,7 +832,7 @@ const batch_inner_join: QuizBatch = {
 const batch_left_join: QuizBatch = {
   id: "quiz-left-join",
   title: "LEFT JOIN & NULL Pattern",
-  icon: "⬅️",
+  icon: "arrow-left",
   topic: "Connect Data",
   difficulty: "intermediate",
   description: "Keeping all rows from the left table, detecting missing matches.",
@@ -899,7 +899,7 @@ const batch_left_join: QuizBatch = {
 const batch_join_group: QuizBatch = {
   id: "quiz-join-group",
   title: "JOIN + GROUP BY",
-  icon: "🤝",
+  icon: "merge",
   topic: "Connect Data",
   difficulty: "intermediate",
   description: "Combining joins and aggregation for powerful reports.",
@@ -971,7 +971,7 @@ const batch_join_group: QuizBatch = {
 const batch_subqueries: QuizBatch = {
   id: "quiz-subqueries",
   title: "Subqueries",
-  icon: "🪆",
+  icon: "layers",
   topic: "Complex Queries",
   difficulty: "advanced",
   description: "Queries nested inside other queries.",
@@ -1038,7 +1038,7 @@ const batch_subqueries: QuizBatch = {
 const batch_query_order: QuizBatch = {
   id: "quiz-query-order",
   title: "SQL Processing Order",
-  icon: "🔄",
+  icon: "refresh",
   topic: "Patterns & Concepts",
   difficulty: "advanced",
   description: "Understanding how SQL actually executes a query.",
@@ -1110,7 +1110,7 @@ const batch_query_order: QuizBatch = {
 const batch_keys: QuizBatch = {
   id: "quiz-keys",
   title: "Primary Keys & Foreign Keys",
-  icon: "🗝️",
+  icon: "key",
   topic: "Connect Data",
   difficulty: "beginner",
   description: "Understanding how tables relate through keys.",
@@ -1177,7 +1177,7 @@ const batch_keys: QuizBatch = {
 const batch_sakila_mixed: QuizBatch = {
   id: "quiz-sakila-mixed",
   title: "Sakila Mixed Practice",
-  icon: "🎬",
+  icon: "film",
   topic: "All Topics",
   difficulty: "advanced",
   description: "Real-world questions using the Sakila rental database — combining everything you've learned.",

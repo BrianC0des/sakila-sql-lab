@@ -11,7 +11,7 @@ export interface TourStep {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    title: "Welcome to SQL Studio! ⚡",
+    title: "Welcome to SQL Studio!",
     description:
       "A 100% browser-based, zero-login SQL learning environment powered by SQLite WASM. Let's take a quick 30-second tour of what you can do here!",
     icon: <Sparkles className="w-5 h-5 text-amber-400" />,

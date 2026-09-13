@@ -12,6 +12,8 @@ import {
   Database,
   FileCode,
   Layers,
+  Sparkles,
+  HardDrive,
 } from "lucide-react";
 import type { SqlChallenge } from "./challenges";
 import type { Database as SqlJsDatabase } from "sql.js";
@@ -323,53 +325,58 @@ ${topicDescriptions[promptTopic]}
         <div className="flex border-b border-slate-800 bg-slate-950 px-5 gap-1 text-xs font-semibold overflow-x-auto">
           <button
             onClick={() => setActiveTab("database")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap ${
+            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "database"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            🗄️ Database ({activeDbName.length > 15 ? activeDbName.slice(0, 15) + "…" : activeDbName})
+            <Database className="w-3.5 h-3.5 text-sky-400" />
+            <span>Database ({activeDbName.length > 15 ? activeDbName.slice(0, 15) + "…" : activeDbName})</span>
           </button>
           <button
             onClick={() => setActiveTab("import")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap ${
+            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "import"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            📥 Batch Import
+            <Upload className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Batch Import</span>
           </button>
           <button
             onClick={() => setActiveTab("manage")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap ${
+            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "manage"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            🗑️ Manage Questions ({customChallenges.length})
+            <Trash2 className="w-3.5 h-3.5 text-purple-400" />
+            <span>Manage Questions ({customChallenges.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("prompt")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap ${
+            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "prompt"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            🤖 AI Prompt
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>AI Prompt</span>
           </button>
           <button
             onClick={() => setActiveTab("export")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap ${
+            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "export"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            💾 Backup & Reset
+            <HardDrive className="w-3.5 h-3.5 text-rose-400" />
+            <span>Backup & Reset</span>
           </button>
         </div>
 
@@ -503,9 +510,15 @@ ${topicDescriptions[promptTopic]}
                         <div key={i} className="flex items-center justify-between border-t border-slate-800/60 pt-1">
                           <span className="truncate pr-2">{d.title}</span>
                           {d.passed ? (
-                            <span className="text-emerald-400 font-bold shrink-0">✓ Valid ({d.rowCount} rows)</span>
+                            <span className="inline-flex items-center gap-1 text-emerald-400 font-bold shrink-0">
+                              <Check className="w-3 h-3" />
+                              <span>Valid ({d.rowCount} rows)</span>
+                            </span>
                           ) : (
-                            <span className="text-rose-400 font-bold shrink-0">✗ {d.error}</span>
+                            <span className="inline-flex items-center gap-1 text-rose-400 font-bold shrink-0">
+                              <X className="w-3 h-3" />
+                              <span>{d.error}</span>
+                            </span>
                           )}
                         </div>
                       ))}

@@ -132,7 +132,7 @@ export const sqlChallenges: SqlChallenge[] = [
     difficulty: "advanced",
     requireOrder: true,
     hints: [
-      "Join chain: `customer c` ➔ `rental r ON c.customer_id = r.customer_id` ➔ `film f ON r.film_id = f.film_id` ➔ `payment p ON r.rental_id = p.rental_id`.",
+      "Join chain: `customer c` -> `rental r ON c.customer_id = r.customer_id` -> `film f ON r.film_id = f.film_id` -> `payment p ON r.rental_id = p.rental_id`.",
       "Filter with `WHERE p.amount >= 4.99`.",
       "Order by `p.payment_date ASC, f.title ASC`."
     ],
