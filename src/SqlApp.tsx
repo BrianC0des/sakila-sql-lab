@@ -201,6 +201,11 @@ export const SqlApp: React.FC = () => {
   const [showHints, setShowHints] = useState(false);
   const [appMode, setAppMode] = useState<"lab" | "cheatsheet">("lab");
   const [showManagerModal, setShowManagerModal] = useState(false);
+  const [managerModalTab, setManagerModalTab] = useState<"database" | "import" | "manage" | "prompt" | "export">("import");
+  const handleOpenAddBatch = useCallback(() => {
+    setManagerModalTab("import");
+    setShowManagerModal(true);
+  }, []);
   const [showTour, setShowTour] = useState(() => {
     try {
       return !localStorage.getItem("sql_studio_tutorial_completed");
@@ -793,6 +798,7 @@ export const SqlApp: React.FC = () => {
               onFilterCustomChange={setFilterCustomChallenges}
               activeTags={activeTags}
               onTagsChange={setActiveTags}
+              onAddBatch={handleOpenAddBatch}
             />
           </div>
         }
@@ -915,6 +921,7 @@ export const SqlApp: React.FC = () => {
                         <button
                           onClick={() => {
                             setIsSettingsMenuOpen(false);
+                            setManagerModalTab("import");
                             setShowManagerModal(true);
                           }}
                           className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-800 hover:text-white transition cursor-pointer group"
@@ -1234,6 +1241,7 @@ export const SqlApp: React.FC = () => {
         onClearCustomChallenges={handleClearCustomChallenges}
         completedMilestones={completedMilestones}
         onResetProgress={handleResetProgress}
+        initialTab={managerModalTab}
       />
 
       {/* Easy Database Switcher Modal */}
@@ -1243,7 +1251,10 @@ export const SqlApp: React.FC = () => {
         activeDbName={dbName}
         onSelectPreset={handleSelectPreset}
         onUploadFile={handleUploadDbFile}
-        onOpenManagerModal={() => setShowManagerModal(true)}
+        onOpenManagerModal={() => {
+          setManagerModalTab("database");
+          setShowManagerModal(true);
+        }}
       />
 
       {/* Mobile Off-Canvas Sidebar Drawer */}
@@ -1271,6 +1282,10 @@ export const SqlApp: React.FC = () => {
               onFilterCustomChange={setFilterCustomChallenges}
               activeTags={activeTags}
               onTagsChange={setActiveTags}
+              onAddBatch={() => {
+                setShowMobileSidebar(false);
+                handleOpenAddBatch();
+              }}
             />
           </div>
         </div>

@@ -38,6 +38,7 @@ interface ImportExportModalProps {
   onClearCustomChallenges: () => void;
   completedMilestones: string[];
   onResetProgress: () => void;
+  initialTab?: "database" | "import" | "manage" | "prompt" | "export";
 }
 
 export const ImportExportModal: React.FC<ImportExportModalProps> = ({
@@ -54,8 +55,15 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   onClearCustomChallenges,
   completedMilestones,
   onResetProgress,
+  initialTab = "database",
 }) => {
-  const [activeTab, setActiveTab] = useState<"database" | "import" | "manage" | "prompt" | "export">("database");
+  const [activeTab, setActiveTab] = useState<"database" | "import" | "manage" | "prompt" | "export">(initialTab);
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
   const [jsonInput, setJsonInput] = useState("");
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [isProcessingDb, setIsProcessingDb] = useState(false);
