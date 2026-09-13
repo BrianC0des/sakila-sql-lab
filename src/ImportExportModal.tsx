@@ -74,6 +74,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   const [promptCount, setPromptCount] = useState<number>(10);
   const [promptTopic, setPromptTopic] = useState<"balanced" | "basics" | "aggregations" | "joins" | "advanced">("balanced");
   const [promptCustomTags, setPromptCustomTags] = useState<string>("joins, aggregates, filtering");
+  const [selectedExportTable, setSelectedExportTable] = useState<string>("");
 
   if (!isOpen) return null;
 
@@ -195,7 +196,7 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
   };
 
   // ─── Database Export Handlers ──────────────────────────────────────────────
-  const handleExportSqliteDb = () => {
+  const handleExportBinaryDb = (ext: "db" | "sqlite" | "sqlite3" = "db") => {
     if (!db) {
       setDbError("No database is currently loaded to export.");
       return;
@@ -205,7 +206,7 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
       const binary = db.export();
       const blob = new Blob([binary], { type: "application/x-sqlite3" });
       const cleanName = activeDbName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") || "database";
-      const fileName = `${cleanName}-${new Date().toISOString().slice(0, 10)}.sqlite`;
+      const fileName = `${cleanName}-${new Date().toISOString().slice(0, 10)}.${ext}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -217,7 +218,86 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
       setDbSuccess(`Exported "${fileName}" (${Math.round(binary.length / 1024)} KB) successfully!`);
       setTimeout(() => setDbSuccess(null), 5000);
     } catch (err: any) {
-      setDbError("Failed to export SQLite database: " + (err.message || String(err)));
+      setDbError(`Failed to export .${ext} database: ` + (err.message || String(err)));
+    }
+  };
+
+  const handleExportTableCsv = (tableName: string) => {
+    if (!db || !tableName) return;
+    try {
+      const res = db.exec(`SELECT * FROM "${tableName}";`);
+      if (!res.length) {
+        setDbError(`Table "${tableName}" is empty or has no data.`);
+        return;
+      }
+      const cols = res[0].columns;
+      const values = res[0].values;
+
+      let csv = cols.map((c) => `"${c.replace(/"/g, '""')}"`).join(",") + "\n";
+      for (const row of values) {
+        csv +=
+          row
+            .map((v) => {
+              if (v === null) return "";
+              const str = String(v);
+              return `"${str.replace(/"/g, '""')}"`;
+            })
+            .join(",") + "\n";
+      }
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const cleanDb = activeDbName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const fileName = `${cleanDb}-${tableName}-${new Date().toISOString().slice(0, 10)}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDbSuccess(`Exported table "${tableName}" as CSV (${values.length} rows)!`);
+      setTimeout(() => setDbSuccess(null), 5000);
+    } catch (err: any) {
+      setDbError(`Failed to export CSV: ${err.message || String(err)}`);
+    }
+  };
+
+  const handleExportTableJson = (tableName: string) => {
+    if (!db || !tableName) return;
+    try {
+      const res = db.exec(`SELECT * FROM "${tableName}";`);
+      if (!res.length) {
+        setDbError(`Table "${tableName}" is empty or has no data.`);
+        return;
+      }
+      const cols = res[0].columns;
+      const values = res[0].values;
+      const jsonList = values.map((row) => {
+        const obj: Record<string, any> = {};
+        cols.forEach((col, idx) => {
+          obj[col] = row[idx];
+        });
+        return obj;
+      });
+
+      const blob = new Blob([JSON.stringify(jsonList, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
+      const cleanDb = activeDbName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const fileName = `${cleanDb}-${tableName}-${new Date().toISOString().slice(0, 10)}.json`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDbSuccess(`Exported table "${tableName}" as JSON (${values.length} records)!`);
+      setTimeout(() => setDbSuccess(null), 5000);
+    } catch (err: any) {
+      setDbError(`Failed to export JSON: ${err.message || String(err)}`);
     }
   };
 
@@ -560,38 +640,113 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                 )}
               </div>
 
-              {/* Export Active Database */}
-              <div className="p-4 rounded-lg border border-slate-800 bg-slate-950 space-y-3">
+              {/* Export Active Database & Tables */}
+              <div className="p-4 rounded-lg border border-slate-800 bg-slate-950 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                     <Download className="w-4 h-4 text-emerald-400" />
-                    Export Active Database
+                    Export Active Database & Tables
                   </h4>
                   <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                     {schemaTables.length} Tables Ready
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Download the current in-memory database to keep a local backup, open in DB Browser for SQLite / DBeaver, or share with classmates.
+                  Export the full database as a standard <strong>.db</strong>, <strong>.sqlite</strong>, or <strong>.sqlite3</strong> binary file (all 100% genuine SQLite formats supported by DB Browser, DBeaver, and VS Code), or download a human-readable <strong>.sql</strong> script and table datasets.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    onClick={handleExportSqliteDb}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download SQLite (.sqlite)
-                  </button>
+                {/* 1. Full Database Binary Export (.db / .sqlite / .sqlite3) */}
+                <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 space-y-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    1. Full Database Binary (.db / .sqlite / .sqlite3)
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleExportBinaryDb("db")}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer"
+                      title="Export as standard .db file (Universal format for DB Browser, Python sqlite3, Android)"
+                    >
+                      <Database className="w-3.5 h-3.5" />
+                      Download .db (Standard)
+                    </button>
 
-                  <button
-                    onClick={handleExportSqlDump}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition cursor-pointer"
-                  >
-                    <FileCode className="w-3.5 h-3.5 text-sky-400" />
-                    Download SQL Script (.sql)
-                  </button>
+                    <button
+                      onClick={() => handleExportBinaryDb("sqlite")}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition cursor-pointer"
+                      title="Export with .sqlite file extension"
+                    >
+                      Download .sqlite
+                    </button>
+
+                    <button
+                      onClick={() => handleExportBinaryDb("sqlite3")}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition cursor-pointer"
+                      title="Export with .sqlite3 file extension"
+                    >
+                      Download .sqlite3
+                    </button>
+                  </div>
                 </div>
+
+                {/* 2. SQL Script & DDL Dump */}
+                <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 space-y-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    2. SQL Script & DDL Dump (.sql)
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={handleExportSqlDump}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-700 hover:bg-sky-600 text-white text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer"
+                      title="Export complete CREATE TABLE DDL and INSERT data statements"
+                    >
+                      <FileCode className="w-3.5 h-3.5" />
+                      Download SQL Script (.sql)
+                    </button>
+                    <span className="text-[11px] text-slate-400">
+                      Compatible with MySQL, phpMyAdmin / XAMPP, and SQLite CLI
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Individual Table Data Export (CSV / JSON) */}
+                {schemaTables.length > 0 && (
+                  <div className="p-2.5 rounded bg-slate-900/60 border border-slate-800 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      3. Export Specific Table Data (CSV / JSON)
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={selectedExportTable || schemaTables[0]?.name}
+                        onChange={(e) => setSelectedExportTable(e.target.value)}
+                        className="text-xs bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-mono"
+                      >
+                        {schemaTables.map((t) => (
+                          <option key={t.name} value={t.name}>
+                            Table: {t.name} ({t.columns.length} cols)
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={() => handleExportTableCsv(selectedExportTable || schemaTables[0]?.name)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition cursor-pointer"
+                        title="Download table rows as CSV spreadsheet"
+                      >
+                        <Download className="w-3 h-3 text-emerald-400" />
+                        Export .csv
+                      </button>
+
+                      <button
+                        onClick={() => handleExportTableJson(selectedExportTable || schemaTables[0]?.name)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition cursor-pointer"
+                        title="Download table rows as JSON array"
+                      >
+                        <Download className="w-3 h-3 text-purple-400" />
+                        Export .json
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -858,11 +1013,18 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                   </button>
 
                   <button
-                    onClick={handleExportSqliteDb}
+                    onClick={() => handleExportBinaryDb("db")}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition ml-2"
                   >
                     <Database className="w-3.5 h-3.5 text-emerald-300" />
-                    Export SQLite DB (.sqlite)
+                    Export DB (.db)
+                  </button>
+
+                  <button
+                    onClick={() => handleExportBinaryDb("sqlite")}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium border border-slate-700 transition ml-2"
+                  >
+                    Export .sqlite
                   </button>
 
                   <button
