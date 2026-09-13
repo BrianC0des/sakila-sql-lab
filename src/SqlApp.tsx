@@ -36,11 +36,13 @@ import {
   GitFork,
   Clock,
   History,
+  RefreshCw,
 } from "lucide-react";
 import { SqlCodeEditor } from "./SqlCodeEditor";
 import { ErdModal } from "./ErdModal";
 import { QueryHistoryModal, type QueryHistoryItem } from "./QueryHistoryModal";
 import { ResultTableViewer } from "./ResultTableViewer";
+import { useUpdateChecker, UpdateNotifier } from "./UpdateNotifier";
 
 interface SchemaTable {
   name: string;
@@ -122,7 +124,8 @@ export const SqlApp: React.FC = () => {
   const [showDbSwitcher, setShowDbSwitcher] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
-  const [activeTag, setActiveTag] = useState<string>("all");
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const { hasUpdate, checkForUpdates } = useUpdateChecker();
   const [expectedColumns, setExpectedColumns] = useState<string[]>([]);
   const [expectedRows, setExpectedRows] = useState<Record<string, any>[]>([]);
   const [resultTab, setResultTab] = useState<"user" | "expected" | "diff">("user");
@@ -407,7 +410,12 @@ export const SqlApp: React.FC = () => {
       setActiveCategoryFilter(challenge.difficulty.toLowerCase());
     }
     setCurrentIdx(idx);
-    setUserQuery(challenge?.starterQuery || "");
+    let queryToSet = challenge?.starterQuery || "";
+    try {
+      const saved = localStorage.getItem(`sql_studio_query_${challenge?.id}`);
+      if (saved !== null && saved !== undefined) queryToSet = saved;
+    } catch {}
+    setUserQuery(queryToSet);
     setUserRows([]);
     setUserColumns([]);
     setExpectedRows([]);
@@ -417,6 +425,14 @@ export const SqlApp: React.FC = () => {
     setTestResults([]);
     setShowHints(false);
   };
+
+  // Auto-save active challenge query so refreshing or updating never loses user work
+  useEffect(() => {
+    if (!activeChallenge?.id) return;
+    try {
+      localStorage.setItem(`sql_studio_query_${activeChallenge.id}`, userQuery);
+    } catch {}
+  }, [userQuery, activeChallenge?.id]);
 
   const nextMilestone = useMemo(() => {
     if (activeCategoryFilter !== "all") {
@@ -658,8 +674,8 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
-              activeTag={activeTag}
-              onTagChange={setActiveTag}
+              activeTags={activeTags}
+              onTagsChange={setActiveTags}
             />
           </div>
         }
@@ -714,6 +730,19 @@ export const SqlApp: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
+                {/* Live Website Update Alert Pill */}
+                {hasUpdate && (
+                  <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-500 hover:bg-emerald-900 transition font-semibold animate-pulse cursor-pointer shadow-sm shrink-0"
+                    title="A new version of SQL Studio was deployed! Click to refresh."
+                  >
+                    <RefreshCw className="w-3 h-3 text-emerald-400" />
+                    <span>Update Ready · Reload</span>
+                  </button>
+                )}
+
                 {/* Easy Database Switcher Button */}
                 <button
                   data-tour="db-switcher-btn"
@@ -861,20 +890,29 @@ export const SqlApp: React.FC = () => {
                   {activeChallenge.tags && activeChallenge.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-slate-800/60">
                       <span className="text-[10px] text-slate-500 font-mono">Topics:</span>
-                      {activeChallenge.tags.map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setActiveTag(t)}
-                          title={`Filter by topic #${t}`}
-                          className={`text-[10px] font-mono px-2 py-0.5 rounded transition ${
-                            activeTag === t
-                              ? "bg-sky-900 text-sky-200 border border-sky-500 font-bold"
-                              : "bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700"
-                          }`}
-                        >
-                          #{t}
-                        </button>
-                      ))}
+                      {activeChallenge.tags.map((t) => {
+                        const isTagSelected = activeTags.includes(t.toLowerCase());
+                        return (
+                          <button
+                            key={t}
+                            onClick={() => {
+                              setActiveTags((prev) =>
+                                prev.includes(t.toLowerCase())
+                                  ? prev.filter((tag) => tag !== t.toLowerCase())
+                                  : [...prev, t.toLowerCase()]
+                              );
+                            }}
+                            title={`Toggle filter for topic #${t}`}
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded transition cursor-pointer ${
+                              isTagSelected
+                                ? "bg-purple-900 text-purple-200 border border-purple-500 font-bold"
+                                : "bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                            }`}
+                          >
+                            #{t}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -1085,8 +1123,8 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
-              activeTag={activeTag}
-              onTagChange={setActiveTag}
+              activeTags={activeTags}
+              onTagsChange={setActiveTags}
             />
           </div>
         </div>
@@ -1112,6 +1150,9 @@ export const SqlApp: React.FC = () => {
 
       {/* Tutorial Tour Overlay */}
       <TutorialTour isOpen={showTour} onClose={() => setShowTour(false)} />
+
+      {/* Live Website Update Notifier */}
+      <UpdateNotifier hasUpdate={hasUpdate} onRefresh={() => window.location.reload()} />
     </div>
   );
 };
