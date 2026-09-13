@@ -184,6 +184,9 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
       {/* ── Difficulty Filter Pills ── */}
       {categories.length > 0 && (
         <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0">
+          <div className="text-[9px] font-bold tracking-wider text-slate-500 uppercase mb-1">
+            Filter by difficulty
+          </div>
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => setActiveFilter("all")}
@@ -218,6 +221,9 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
       {/* ── Topic Tag Filter Pills ── */}
       {allTags.length > 0 && (
         <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0 overflow-x-auto">
+          <div className="text-[9px] font-bold tracking-wider text-slate-500 uppercase mb-1">
+            Filter by topic
+          </div>
           <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
             <button
               onClick={() => setActiveTag("all")}
