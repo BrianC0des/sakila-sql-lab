@@ -47,9 +47,17 @@ import { QueryHistoryModal, type QueryHistoryItem } from "./QueryHistoryModal";
 import { ResultTableViewer } from "./ResultTableViewer";
 import { useUpdateChecker, UpdateNotifier } from "./UpdateNotifier";
 
-interface SchemaTable {
+export interface SchemaColumn {
+  name: string;
+  type?: string;
+  isPk?: boolean;
+  notNull?: boolean;
+}
+
+export interface SchemaTable {
   name: string;
   columns: string[];
+  columnDetails?: SchemaColumn[];
 }
 
 export const SqlApp: React.FC = () => {
@@ -198,6 +206,22 @@ export const SqlApp: React.FC = () => {
   const [explainPlan, setExplainPlan] = useState<any[]>([]);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [showInspector, setShowInspector] = useState(false);
+  const [isInspectorMaximized, setIsInspectorMaximized] = useState(false);
+  const [inspectorHeight, setInspectorHeight] = useState(260);
+
+  const handleToggleMaximizeInspector = useCallback(() => {
+    setIsInspectorMaximized((prev) => {
+      const next = !prev;
+      setInspectorHeight(
+        next
+          ? typeof window !== "undefined"
+            ? Math.round(window.innerHeight * 0.75)
+            : 580
+          : 260
+      );
+      return next;
+    });
+  }, []);
   const [showHints, setShowHints] = useState(false);
   const [appMode, setAppMode] = useState<"lab" | "cheatsheet">("lab");
   const [showManagerModal, setShowManagerModal] = useState(false);
@@ -365,12 +389,21 @@ export const SqlApp: React.FC = () => {
       for (const name of tableNames) {
         try {
           const colsRes = database.exec(`PRAGMA table_info("${name}");`);
-          const columns = colsRes.length && colsRes[0].values
-            ? colsRes[0].values.map((v) => String(v[1]))
-            : [];
-          tables.push({ name, columns });
+          const columns: string[] = [];
+          const columnDetails: SchemaColumn[] = [];
+          if (colsRes.length && colsRes[0].values) {
+            for (const v of colsRes[0].values) {
+              const colName = String(v[1]);
+              const colType = String(v[2] || "TEXT");
+              const notNull = Number(v[3]) === 1;
+              const isPk = Number(v[5]) > 0;
+              columns.push(colName);
+              columnDetails.push({ name: colName, type: colType, notNull, isPk });
+            }
+          }
+          tables.push({ name, columns, columnDetails });
         } catch {
-          tables.push({ name, columns: [] });
+          tables.push({ name, columns: [], columnDetails: [] });
         }
       }
       setSchemaTables(tables);
@@ -1177,9 +1210,9 @@ export const SqlApp: React.FC = () => {
                       showInspector ? (
                         <SplitPane
                           direction="vertical"
-                          initialSize={200}
+                          initialSize={inspectorHeight}
                           minSize={120}
-                          maxSize={400}
+                          maxSize={typeof window !== "undefined" ? Math.round(window.innerHeight * 0.85) : 800}
                           primary="second"
                           firstPane={
                             <ResultTableViewer
@@ -1202,6 +1235,9 @@ export const SqlApp: React.FC = () => {
                                 rowCount={userRows.length}
                                 explainPlan={explainPlan}
                                 schemaTables={schemaTables}
+                                isMaximized={isInspectorMaximized}
+                                onToggleMaximize={handleToggleMaximizeInspector}
+                                onClose={() => setShowInspector(false)}
                               />
                             </div>
                           }

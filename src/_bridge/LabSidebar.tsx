@@ -368,194 +368,36 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
               </div>
             )}
 
-            {/* Multi-Select Topic Tag Dropdown */}
+            {/* Topic Tag Dropdown */}
             {tagCounts.length > 0 && (
-              <div ref={topicDropdownRef} className="relative">
-                {/* Hidden select for backwards compatibility & automated test assertions */}
-                <select
-                  id="topic-filter-select"
-                  data-test="topic-select"
-                  value={selectedTags.length === 1 ? selectedTags[0] : selectedTags.length === 0 ? "all" : selectedTags[0]}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "all") clearAllTags();
-                    else updateSelectedTags([val]);
-                  }}
-                  className="sr-only"
-                  aria-hidden="true"
-                  tabIndex={-1}
+              <div>
+                <label
+                  htmlFor="topic-filter-select"
+                  className="block text-[9px] text-slate-400 mb-0.5 font-medium"
                 >
-                  <option value="all">All Topics</option>
-                  {tagCounts.map(({ tag, count }) => (
-                    <option key={tag} value={tag}>
-                      #{tag} ({count})
-                    </option>
-                  ))}
-                </select>
-
-                <div className="flex items-center justify-between mb-0.5">
-                  <label
-                    onClick={() => setIsTopicMenuOpen((prev) => !prev)}
-                    className="block text-[9px] text-slate-400 font-medium cursor-pointer"
+                  Topic Tags
+                </label>
+                <div className="relative">
+                  <select
+                    id="topic-filter-select"
+                    data-test="topic-select"
+                    value={selectedTags.length > 0 ? selectedTags[0] : "all"}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "all") clearAllTags();
+                      else updateSelectedTags([val]);
+                    }}
+                    className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
                   >
-                    Topic Tags
-                  </label>
-                  {selectedTags.length > 0 && (
-                    <span className="text-[9px] text-sky-400 font-mono font-semibold">
-                      {selectedTags.length} active
-                    </span>
-                  )}
+                    <option value="all">All Topics ({tagCounts.length})</option>
+                    {tagCounts.map(({ tag, count }) => (
+                      <option key={tag} value={tag}>
+                        #{tag} ({count})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
                 </div>
-
-                {/* Multi-Select Trigger Button */}
-                <button
-                  type="button"
-                  data-test="topic-multiselect-trigger"
-                  onClick={() => setIsTopicMenuOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between text-[11px] bg-slate-950 border rounded px-2 py-1 text-slate-200 font-sans cursor-pointer transition truncate ${
-                    isTopicMenuOpen || selectedTags.length > 0
-                      ? "border-sky-500/80 bg-slate-950"
-                      : "border-slate-800 hover:border-slate-700"
-                  }`}
-                  title={
-                    selectedTags.length === 0
-                      ? "All Topics (Click to select multiple tags)"
-                      : selectedTags.map((t) => `#${t}`).join(", ")
-                  }
-                >
-                  <span className="truncate">
-                    {selectedTags.length === 0
-                      ? "All Topics"
-                      : selectedTags.length === 1
-                      ? `#${selectedTags[0]}`
-                      : `${selectedTags.length} tags selected`}
-                  </span>
-                  <div className="flex items-center gap-1 shrink-0 ml-1">
-                    <ChevronDown
-                      className={`w-3 h-3 text-slate-400 transition-transform ${
-                        isTopicMenuOpen ? "rotate-180 text-sky-400" : ""
-                      }`}
-                    />
-                  </div>
-                </button>
-
-                {/* Floating Multi-Select Popover Menu (Fits within sidebar width) */}
-                {isTopicMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-[calc(200%+0.375rem)] min-w-[200px] max-w-[calc(100vw-1.5rem)] max-h-60 flex flex-col bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-100">
-                    {/* Search inside tags */}
-                    <div className="relative mb-2">
-                      <Search className="w-3 h-3 text-slate-500 absolute left-2 top-2 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={topicSearch}
-                        onChange={(e) => setTopicSearch(e.target.value)}
-                        placeholder={`Search ${tagCounts.length} tags...`}
-                        className="w-full pl-7 pr-6 py-1 text-[11px] bg-slate-950 border border-slate-800 rounded text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500 font-sans"
-                        autoFocus
-                      />
-                      {topicSearch && (
-                        <button
-                          type="button"
-                          onClick={() => setTopicSearch("")}
-                          className="absolute right-1.5 top-1.5 p-0.5 text-slate-500 hover:text-slate-300"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Mode & Action Header */}
-                    <div className="flex items-center justify-between text-[10px] pb-1.5 border-b border-slate-800 mb-1.5 text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-500">Match:</span>
-                        <button
-                          type="button"
-                          onClick={() => setTagMatchMode("any")}
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition cursor-pointer ${
-                            tagMatchMode === "any"
-                              ? "bg-sky-950 text-sky-300 border border-sky-700"
-                              : "text-slate-500 hover:text-slate-300 border border-transparent"
-                          }`}
-                          title="Show questions matching ANY selected tag (OR)"
-                        >
-                          ANY
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setTagMatchMode("all")}
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition cursor-pointer ${
-                            tagMatchMode === "all"
-                              ? "bg-sky-950 text-sky-300 border border-sky-700"
-                              : "text-slate-500 hover:text-slate-300 border border-transparent"
-                          }`}
-                          title="Show questions matching ALL selected tags (AND)"
-                        >
-                          ALL
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {selectedTags.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={clearAllTags}
-                            className="text-[10px] text-rose-400 hover:text-rose-300 transition cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setIsTopicMenuOpen(false)}
-                          className="text-[10px] text-sky-400 hover:text-sky-300 transition font-semibold cursor-pointer"
-                        >
-                          Done
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Scrollable Tag Checkbox List */}
-                    <div className="overflow-y-auto space-y-0.5 flex-1 max-h-48 pr-0.5">
-                      {filteredTagCounts.length === 0 ? (
-                        <div className="text-center py-3 text-[11px] text-slate-500 italic">
-                          No matching tags
-                        </div>
-                      ) : (
-                        filteredTagCounts.map(({ tag, count }) => {
-                          const isSelected = selectedTags.includes(tag.toLowerCase());
-                          return (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => toggleTag(tag)}
-                              className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-mono transition text-left cursor-pointer ${
-                                isSelected
-                                  ? "bg-sky-950/80 text-sky-200 border border-sky-700/60 font-semibold"
-                                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                              }`}
-                            >
-                              <div className="flex items-center gap-1.5 truncate">
-                                <span
-                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition ${
-                                    isSelected
-                                      ? "bg-sky-500 border-sky-400 text-slate-950"
-                                      : "border-slate-700 bg-slate-950"
-                                  }`}
-                                >
-                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                                </span>
-                                <span className="truncate">#{tag}</span>
-                              </div>
-                              <span className="text-[10px] text-slate-400 shrink-0 font-sans ml-2">
-                                {count}
-                              </span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>

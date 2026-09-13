@@ -576,54 +576,54 @@ ${clarityDescriptions[promptClarity]}
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-800 bg-slate-950 px-5 gap-1 text-xs font-semibold overflow-x-auto">
+        <div className="flex border-b border-slate-800 bg-slate-950 px-3 sm:px-4 gap-0.5 sm:gap-1 text-xs font-semibold overflow-x-auto">
           <button
             onClick={() => setActiveTab("prompt")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
+            className={`py-2 px-2.5 sm:px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "prompt"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>AI Prompt Generator</span>
+            <span>AI Prompt</span>
           </button>
           <button
             onClick={() => setActiveTab("import")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
+            className={`py-2 px-2.5 sm:px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "import"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Upload className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Batch Import</span>
+            <span>Import</span>
           </button>
           <button
             onClick={() => setActiveTab("manage")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
+            className={`py-2 px-2.5 sm:px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "manage"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Trash2 className="w-3.5 h-3.5 text-purple-400" />
-            <span>Manage Questions ({customChallenges.length})</span>
+            <span>Manage ({customChallenges.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("database")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
+            className={`py-2 px-2.5 sm:px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "database"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             <Database className="w-3.5 h-3.5 text-sky-400" />
-            <span>Database ({activeDbName.length > 12 ? activeDbName.slice(0, 12) + "…" : activeDbName})</span>
+            <span>Database</span>
           </button>
           <button
             onClick={() => setActiveTab("export")}
-            className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
+            className={`py-2 px-2.5 sm:px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
               activeTab === "export"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"

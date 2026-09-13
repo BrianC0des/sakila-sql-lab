@@ -29,6 +29,10 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setSize(initialSize);
+  }, [initialSize]);
+
   const isHorizontal = direction === "horizontal";
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
