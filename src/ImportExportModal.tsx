@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Copy,
   Check,
@@ -14,6 +14,7 @@ import {
   Layers,
   Sparkles,
   HardDrive,
+  ChevronDown,
 } from "lucide-react";
 import type { SqlChallenge } from "./challenges";
 import type { Database as SqlJsDatabase } from "sql.js";
@@ -75,6 +76,20 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   const [promptTopic, setPromptTopic] = useState<"balanced" | "basics" | "aggregations" | "joins" | "advanced">("balanced");
   const [promptCustomTags, setPromptCustomTags] = useState<string>("joins, aggregates, filtering");
   const [selectedExportTable, setSelectedExportTable] = useState<string>("");
+  const [isTableDropdownOpen, setIsTableDropdownOpen] = useState(false);
+  const tableDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (tableDropdownRef.current && !tableDropdownRef.current.contains(e.target as Node)) {
+        setIsTableDropdownOpen(false);
+      }
+    };
+    if (isTableDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isTableDropdownOpen]);
 
   if (!isOpen) return null;
 
@@ -715,17 +730,51 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                       3. Export Specific Table Data (CSV / JSON)
                     </span>
                     <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        value={selectedExportTable || schemaTables[0]?.name}
-                        onChange={(e) => setSelectedExportTable(e.target.value)}
-                        className="text-xs bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-mono"
-                      >
-                        {schemaTables.map((t) => (
-                          <option key={t.name} value={t.name}>
-                            Table: {t.name} ({t.columns.length} cols)
-                          </option>
-                        ))}
-                      </select>
+                      <div ref={tableDropdownRef} className="relative">
+                        <button
+                          type="button"
+                          data-test="table-export-trigger"
+                          onClick={() => setIsTableDropdownOpen((prev) => !prev)}
+                          className="inline-flex items-center justify-between gap-3 text-xs bg-slate-950 border border-slate-700 hover:border-sky-500 rounded px-3 py-1.5 text-slate-200 font-mono transition cursor-pointer min-w-[220px]"
+                        >
+                          <span className="truncate">
+                            Table: <strong className="text-sky-300">{selectedExportTable || schemaTables[0]?.name || "Select table"}</strong>
+                          </span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                              isTableDropdownOpen ? "rotate-180 text-sky-400" : ""
+                            }`}
+                          />
+                        </button>
+
+                        {isTableDropdownOpen && (
+                          <div className="absolute left-0 top-full mt-1 w-64 max-h-56 overflow-y-auto bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
+                            {schemaTables.map((t) => {
+                              const isSelected = (selectedExportTable || schemaTables[0]?.name) === t.name;
+                              return (
+                                <button
+                                  key={t.name}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedExportTable(t.name);
+                                    setIsTableDropdownOpen(false);
+                                  }}
+                                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition text-left cursor-pointer ${
+                                    isSelected
+                                      ? "bg-sky-950 text-sky-200 border border-sky-600 font-semibold"
+                                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                  }`}
+                                >
+                                  <span className="truncate">{t.name}</span>
+                                  <span className="text-[10px] text-slate-400 shrink-0 font-sans ml-2">
+                                    {t.columns.length} cols
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
 
                       <button
                         onClick={() => handleExportTableCsv(selectedExportTable || schemaTables[0]?.name)}
