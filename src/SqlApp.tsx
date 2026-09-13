@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import initSqlJs, { Database as SqlJsDatabase } from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { sqlChallenges, type SqlChallenge } from "./challenges";
@@ -37,6 +37,9 @@ import {
   Clock,
   History,
   RefreshCw,
+  Settings,
+  Table2,
+  Play,
 } from "lucide-react";
 import { SqlCodeEditor } from "./SqlCodeEditor";
 import { ErdModal } from "./ErdModal";
@@ -223,6 +226,21 @@ export const SqlApp: React.FC = () => {
       return false;
     }
   });
+
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setIsSettingsMenuOpen(false);
+      }
+    };
+    if (isSettingsMenuOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isSettingsMenuOpen]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -781,29 +799,46 @@ export const SqlApp: React.FC = () => {
         secondPane={
           <div className="flex flex-col h-full w-full min-w-0">
             {/* Top Bar */}
-            <header className="flex items-center justify-between px-3 md:px-4 py-2 bg-slate-900 border-b border-slate-800 shrink-0 gap-2 overflow-x-auto">
-              <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <header className="flex items-center justify-between px-3 md:px-4 py-2 bg-slate-900 border-b border-slate-800 shrink-0 gap-3">
+              {/* Left Group: Logo, DB Context Breadcrumb, and Mode Switcher */}
+              <div className="flex items-center gap-2 md:gap-3 shrink-0 min-w-0">
                 {/* Mobile Milestones Drawer Toggle */}
                 {isMobile && (
                   <button
                     onClick={() => setShowMobileSidebar(true)}
                     title="Open Milestones List"
-                    className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 hover:border-sky-500 transition flex items-center gap-1 text-xs font-semibold"
+                    className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 hover:border-sky-500 transition flex items-center gap-1 text-xs font-semibold cursor-pointer"
                   >
                     <Menu className="w-4 h-4" />
                     <span className="text-[11px] font-mono">Milestones</span>
                   </button>
                 )}
 
+                {/* Brand Logo */}
                 <span className="font-bold text-sm tracking-tight text-sky-400 flex items-center gap-1.5 shrink-0">
                   <Zap className="w-4 h-4 text-amber-400 fill-amber-400/20" /> SQL Studio
                 </span>
 
+                <span className="text-slate-600 select-none font-thin text-xs hidden sm:inline">/</span>
+
+                {/* Database Breadcrumb Switcher */}
+                <button
+                  data-tour="db-switcher-btn"
+                  onClick={() => setShowDbSwitcher(true)}
+                  title="Switch Database (Sakila, Northwind, World, or Upload Custom)"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition font-medium shadow-xs cursor-pointer"
+                >
+                  <Database className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="font-mono text-slate-100 text-[11px] max-w-[100px] sm:max-w-[130px] truncate">{dbName}</span>
+                  <span className="text-[10px] text-slate-400 hidden md:inline font-sans">({schemaTables.length} tables)</span>
+                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                </button>
+
                 {/* Mode Tabs (Lab & Cheat Sheet Only) */}
-                <div className="flex rounded overflow-hidden border border-slate-700 font-medium">
+                <div className="flex rounded overflow-hidden border border-slate-700 font-medium ml-0.5">
                   <button
                     onClick={() => setAppMode("lab")}
-                    className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 transition ${
+                    className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 transition cursor-pointer ${
                       appMode === "lab"
                         ? "bg-slate-700 text-slate-100 font-bold"
                         : "bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -815,7 +850,7 @@ export const SqlApp: React.FC = () => {
                   <button
                     data-tour="cheatsheet-tab"
                     onClick={() => setAppMode("cheatsheet")}
-                    className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 transition border-l border-slate-700 ${
+                    className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 transition border-l border-slate-700 cursor-pointer ${
                       appMode === "cheatsheet"
                         ? "bg-slate-700 text-slate-100 font-bold"
                         : "bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -827,100 +862,100 @@ export const SqlApp: React.FC = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                {/* Live Website Update Alert Pill */}
-                {hasUpdate && (
+              {/* Right Group: 1-Click Workbench Tools & Clean Utility Popover */}
+              <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                {/* 1-Click Visible Table Schema Inspector */}
+                {appMode === "lab" && (
                   <button
-                    type="button"
-                    onClick={() => window.location.reload()}
-                    className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-500 hover:bg-emerald-900 transition font-semibold animate-pulse cursor-pointer shadow-sm shrink-0"
-                    title="A new version of SQL Studio was deployed! Click to refresh."
+                    data-test="inspector-toggle-btn"
+                    onClick={() => setShowInspector(!showInspector)}
+                    title={showInspector ? "Hide Table Schema & Data Inspector" : "Show Table Schema & Data Inspector"}
+                    className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded transition border font-medium cursor-pointer ${
+                      showInspector
+                        ? "bg-sky-950 text-sky-300 border-sky-600 shadow-xs"
+                        : "bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                    }`}
                   >
-                    <RefreshCw className="w-3 h-3 text-emerald-400" />
-                    <span>Update Ready · Reload</span>
+                    <Table2 className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="hidden sm:inline">Inspector</span>
                   </button>
                 )}
 
-                {/* Easy Database Switcher Button */}
+                {/* 1-Click Visual ERD Map */}
                 <button
-                  data-tour="db-switcher-btn"
-                  onClick={() => setShowDbSwitcher(true)}
-                  title="Switch Database (Sakila, Northwind, World, or Upload Custom)"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-200 border border-sky-700/80 hover:border-sky-500 transition font-medium shadow-xs"
+                  onClick={() => setShowErdModal(true)}
+                  title="Open Visual ERD & Schema Relationship Explorer"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition font-medium cursor-pointer"
                 >
-                  <Database className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Switch DB</span>
-                  <span className="text-[10px] text-sky-300 font-mono bg-sky-900/60 px-1.5 py-0.2 rounded border border-sky-700/60 max-w-[90px] truncate">
-                    {dbName}
-                  </span>
-                  <ChevronDown className="w-3 h-3 text-sky-400" />
+                  <GitFork className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="hidden sm:inline">ERD Map</span>
                 </button>
 
-                {/* Question Packs & AI Manager Button */}
+                {/* 1-Click Question Packs & Lab Manager */}
                 <button
                   data-tour="db-modal-btn"
                   onClick={() => setShowManagerModal(true)}
                   title="Import Local DB, Batch Import Questions, or Manage Questions"
-                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition font-medium"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition font-medium cursor-pointer"
                 >
                   <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="hidden md:inline">Question Packs</span>
+                  <span className="hidden md:inline">Packs</span>
                 </button>
 
-                {/* ERD Schema Map Button */}
-                <button
-                  onClick={() => setShowErdModal(true)}
-                  title="Open Visual ERD & Schema Relationship Explorer"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-sky-100 border border-slate-700 hover:border-sky-500 transition font-medium"
-                >
-                  <GitFork className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="hidden md:inline">ERD Map</span>
-                </button>
+                <div className="w-[1px] h-4 bg-slate-800 mx-0.5 shrink-0" />
 
-                {appMode === "lab" && (
-                  <>
-                    <button
-                      onClick={() => setShowInspector(!showInspector)}
-                      className={`text-xs px-2.5 py-1 rounded transition border ${
-                        showInspector
-                          ? "bg-slate-800 text-sky-400 border-sky-600"
-                          : "bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800"
-                      }`}
-                    >
-                      {showInspector ? "Hide Inspector" : "Show Inspector"}
-                    </button>
-                    <button
-                      data-tour="run-btn"
-                      onClick={runQuery}
-                      className="text-xs px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 font-bold rounded text-white shadow-sm transition active:scale-95"
-                    >
-                      Run Query (Ctrl+Enter)
-                    </button>
-                  </>
-                )}
-
-                {/* Tour Replay Button */}
-                <button
-                  onClick={() => setShowTour(true)}
-                  title="Take a Tour"
-                  className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 hover:border-amber-600 transition font-medium"
-                >
-                  <GraduationCap className="w-3.5 h-3.5" />
-                  Tour
-                </button>
-
-                {/* GitHub Source Code */}
-                <a
-                  href="https://github.com/BrianC0des/sakila-sql-lab"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View Source Code on GitHub"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 transition font-medium"
-                >
-                  <GithubIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
-                  <span className="hidden sm:inline">GitHub</span>
-                </a>
+                {/* Settings & Utilities Popover */}
+                <div className="relative shrink-0" ref={settingsMenuRef}>
+                  <button
+                    data-test="settings-menu-btn"
+                    onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+                    title="Preferences, Tour, and Resources"
+                    className={`p-1.5 rounded transition border cursor-pointer ${
+                      isSettingsMenuOpen
+                        ? "bg-slate-700 text-white border-slate-500"
+                        : "bg-slate-800/90 text-slate-400 hover:text-slate-200 border-slate-700 hover:border-slate-600"
+                    }`}
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
+                  {isSettingsMenuOpen && (
+                    <div className="absolute right-0 mt-1.5 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 z-50 text-xs text-slate-300 divide-y divide-slate-800/80 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setIsSettingsMenuOpen(false);
+                            setShowTour(true);
+                          }}
+                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        >
+                          <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Interactive Tour</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsSettingsMenuOpen(false);
+                            setShowManagerModal(true);
+                          }}
+                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        >
+                          <Layers className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Lab Manager & DB</span>
+                        </button>
+                      </div>
+                      <div className="py-1">
+                        <a
+                          href="https://github.com/BrianC0des/sakila-sql-lab"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        >
+                          <GithubIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <span>GitHub Repository</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </header>
 
@@ -1106,10 +1141,18 @@ export const SqlApp: React.FC = () => {
                             <button
                               onClick={() => setUserQuery("")}
                               title="Clear Editor"
-                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-slate-700 transition text-[10px]"
+                              className="inline-flex items-center gap-1 px-1.5 py-1 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-slate-700 transition text-[10px] cursor-pointer"
                             >
                               <Trash2 className="w-3 h-3" />
                               Clear
+                            </button>
+                            <button
+                              data-tour="run-btn"
+                              onClick={runQuery}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow-xs transition active:scale-95 text-[11px] cursor-pointer ml-1"
+                            >
+                              <Play className="w-3 h-3 fill-white" />
+                              <span>Run Query (Ctrl+Enter)</span>
                             </button>
                           </div>
                         </div>

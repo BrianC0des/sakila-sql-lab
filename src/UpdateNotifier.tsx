@@ -121,6 +121,7 @@ export const UpdateNotifier: React.FC<UpdateNotifierProps> = ({ hasUpdate, onRef
   return (
     <aside
       aria-label="Update alert"
+      data-test="floating-update-card"
       className="fixed bottom-4 right-4 z-50 max-w-sm w-[calc(100vw-2rem)] sm:w-auto bg-slate-900/95 backdrop-blur-md border border-sky-500/80 rounded-xl shadow-2xl p-3.5 flex items-center justify-between gap-3 text-slate-100 animate-in slide-in-from-bottom-5 duration-200"
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -143,6 +144,7 @@ export const UpdateNotifier: React.FC<UpdateNotifierProps> = ({ hasUpdate, onRef
       <div className="flex items-center gap-1.5 shrink-0 ml-2">
         <button
           type="button"
+          data-test="update-reload-btn"
           onClick={handleReload}
           className="px-3 py-1.5 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
         >
