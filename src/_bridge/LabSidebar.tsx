@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { CheckCircle2, ChevronRight, BookOpen, Search, X, Hash } from "lucide-react";
+import { CheckCircle2, ChevronRight, BookOpen, Search, X, Hash, ChevronDown, Filter } from "lucide-react";
 
 export const GithubIcon: React.FC<{ className?: string }> = ({ className = "w-3.5 h-3.5" }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -91,8 +91,8 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
     return Array.from(seen);
   }, [milestones]);
 
-  // Derive top unique tags across milestones
-  const allTags = useMemo(() => {
+  // Derive unique tags with question frequencies
+  const tagCounts = useMemo(() => {
     const counts = new Map<string, number>();
     milestones.forEach((m) => {
       (m.tags || []).forEach((t) => {
@@ -102,8 +102,10 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
     });
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([tag]) => tag);
+      .map(([tag, count]) => ({ tag, count }));
   }, [milestones]);
+
+  const allTags = useMemo(() => tagCounts.map((t) => t.tag), [tagCounts]);
 
   // Filtered view
   const filteredMilestones = useMemo(() => {
@@ -181,77 +183,118 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
         </div>
       </div>
 
-      {/* ── Difficulty Filter Pills ── */}
-      {categories.length > 0 && (
-        <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0">
-          <div className="text-[9px] font-bold tracking-wider text-slate-500 uppercase mb-1">
-            Filter by difficulty
+      {/* ── Filter Controls (Difficulty & Topic Dropdowns) ── */}
+      {(categories.length > 0 || tagCounts.length > 0) && (
+        <div className="px-2.5 py-2 border-b border-slate-800/80 shrink-0 space-y-1.5 bg-slate-900/50">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1">
+              <Filter className="w-2.5 h-2.5 text-sky-400" />
+              Filter by
+            </span>
+            {(activeFilter !== "all" || (activeTag && activeTag !== "all") || searchQuery) && (
+              <button
+                onClick={() => {
+                  setActiveFilter("all");
+                  setActiveTag("all");
+                  setSearchQuery("");
+                }}
+                className="text-[9px] text-sky-400 hover:text-sky-300 transition hover:underline"
+              >
+                Reset filters
+              </button>
+            )}
           </div>
-          <div className="flex flex-wrap gap-1">
-            <button
-              onClick={() => setActiveFilter("all")}
-              className={`text-[10px] px-2 py-0.5 rounded border font-medium transition ${
-                activeFilter === "all"
-                  ? `${DEFAULT_PILL} ${ACTIVE_PILL} ring-sky-500 text-sky-300 border-sky-600`
-                  : DEFAULT_PILL
-              }`}
-            >
-              All
-            </button>
 
-            {categories.map((cat) => {
-              const styles = CATEGORY_STYLES[cat] ?? DEFAULT_PILL;
-              const isActive = activeFilter === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setActiveFilter(isActive ? "all" : cat)}
-                  className={`text-[10px] px-2 py-0.5 rounded border font-medium transition ${styles.pill} ${
-                    isActive ? ACTIVE_PILL + " ring-current" : ""
-                  }`}
+          <div className="grid grid-cols-2 gap-1.5">
+            {/* Difficulty Dropdown */}
+            {categories.length > 0 && (
+              <div>
+                <label
+                  htmlFor="difficulty-filter-select"
+                  className="block text-[9px] text-slate-400 mb-0.5 font-medium"
                 >
-                  {capitalise(cat)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                  Difficulty
+                </label>
+                <div className="relative">
+                  <select
+                    id="difficulty-filter-select"
+                    data-test="difficulty-select"
+                    value={activeFilter}
+                    onChange={(e) => setActiveFilter(e.target.value)}
+                    className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
+                  >
+                    <option value="all">All ({milestones.length})</option>
+                    {categories.map((cat) => {
+                      const count = milestones.filter(
+                        (m) => (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase()
+                      ).length;
+                      return (
+                        <option key={cat} value={cat}>
+                          {capitalise(cat)} ({count})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                </div>
+              </div>
+            )}
 
-      {/* ── Topic Tag Filter Pills ── */}
-      {allTags.length > 0 && (
-        <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0 overflow-x-auto">
-          <div className="text-[9px] font-bold tracking-wider text-slate-500 uppercase mb-1">
-            Filter by topic
-          </div>
-          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-            <button
-              onClick={() => setActiveTag("all")}
-              className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 font-mono transition ${
-                activeTag === "all"
-                  ? "bg-sky-950 text-sky-300 border border-sky-600 font-semibold"
-                  : "bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-750"
-              }`}
-            >
-              All Topics
-            </button>
-            {allTags.slice(0, 10).map((tag) => {
-              const isActive = activeTag === tag;
-              return (
-                <button
-                  key={tag}
-                  onClick={() => setActiveTag(isActive ? "all" : tag)}
-                  className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 font-mono transition flex items-center gap-0.5 ${
-                    isActive
-                      ? "bg-sky-900 text-sky-200 border border-sky-500 font-semibold shadow-xs"
-                      : "bg-slate-850 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-750"
-                  }`}
+            {/* Topic Tag Dropdown */}
+            {tagCounts.length > 0 && (
+              <div>
+                <label
+                  htmlFor="topic-filter-select"
+                  className="block text-[9px] text-slate-400 mb-0.5 font-medium"
                 >
-                  <span>#{tag}</span>
-                </button>
-              );
-            })}
+                  Topic Tag
+                </label>
+                <div className="relative">
+                  <select
+                    id="topic-filter-select"
+                    data-test="topic-select"
+                    value={activeTag}
+                    onChange={(e) => setActiveTag(e.target.value)}
+                    className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
+                  >
+                    <option value="all">All Topics</option>
+                    {tagCounts.map(({ tag, count }) => (
+                      <option key={tag} value={tag}>
+                        #{tag} ({count})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Active Filter Badges */}
+          {(activeFilter !== "all" || (activeTag && activeTag !== "all")) && (
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              {activeFilter !== "all" && (
+                <button
+                  onClick={() => setActiveFilter("all")}
+                  title="Remove difficulty filter"
+                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700/80 hover:bg-sky-900 transition"
+                >
+                  <span>{capitalise(activeFilter)}</span>
+                  <X className="w-2.5 h-2.5 text-sky-400" />
+                </button>
+              )}
+              {activeTag && activeTag !== "all" && (
+                <button
+                  onClick={() => setActiveTag("all")}
+                  title="Remove topic filter"
+                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/80 hover:bg-purple-900 transition"
+                >
+                  <span>#{activeTag}</span>
+                  <X className="w-2.5 h-2.5 text-purple-400" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
