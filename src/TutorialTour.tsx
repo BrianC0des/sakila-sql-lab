@@ -19,15 +19,23 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     targetSelector: "[data-tour='sidebar']",
-    title: "1. Progressive Milestones",
+    title: "1. 36 Milestones & Difficulty Category Filters",
     description:
-      "Navigate through 36 hands-on milestones spanning foundational SELECTs, multi-table JOINs, subqueries, and classic exam traps. Progress is automatically saved to your browser's localStorage.",
+      "Navigate through 36 hands-on milestones spanning foundational SELECTs, multi-table JOINs, subqueries, and classic exam traps. Use the category filter pills (All, Beginner, Intermediate, Advanced, Custom) to focus your study sessions.",
     icon: <BookOpen className="w-5 h-5 text-sky-400" />,
     placement: "right"
   },
   {
+    targetSelector: "[data-tour='db-switcher-btn']",
+    title: "2. Instant Database Switcher",
+    description:
+      "Easily switch between bundled sample databases (Sakila DVD rental, Northwind commerce, World demographics) or upload any custom SQLite file with a single click.",
+    icon: <Database className="w-5 h-5 text-sky-400" />,
+    placement: "bottom"
+  },
+  {
     targetSelector: "[data-tour='editor']",
-    title: "2. Syntax Highlighting & Real-Time Linter",
+    title: "3. Syntax Highlighting & Real-Time Linter",
     description:
       "Write queries with Prism.js syntax coloring. The editor automatically validates your syntax with SQLite's EXPLAIN query engine in real-time. Use Shift+Alt+F to format your SQL and Ctrl+Enter to run.",
     icon: <Code2 className="w-5 h-5 text-emerald-400" />,
@@ -35,7 +43,7 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     targetSelector: "[data-tour='run-btn']",
-    title: "3. Automated Query Verification",
+    title: "4. Automated Query Verification & Plan Analysis",
     description:
       "When you execute your query, results are instantly checked against reference answers. You'll see matching rows, column types, performance in milliseconds, and query plan trees.",
     icon: <Play className="w-5 h-5 text-emerald-400" />,
@@ -43,17 +51,17 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     targetSelector: "[data-tour='cheatsheet-tab']",
-    title: "4. Query Architecture Cheat Sheet",
+    title: "5. Query Architecture Cheat Sheet",
     description:
-      "Switch here to review the 7-step conceptual query execution order (FROM → WHERE → GROUP BY → ...), 7 common query templates, and a live schema reference of the active database.",
+      "Switch here to review the 7-step conceptual query execution order (FROM → WHERE → GROUP BY → ...), 5 common exam traps, 7 query shapes, and a live schema reference of the active database.",
     icon: <BookOpen className="w-5 h-5 text-amber-400" />,
     placement: "bottom"
   },
   {
     targetSelector: "[data-tour='db-modal-btn']",
-    title: "5. Any Database & AI Question Packs",
+    title: "6. Custom Packs & AI Prompt Generator",
     description:
-      "Import any local SQLite (.db, .sqlite, .sql) file, generate auto-exploration milestones, or copy tailored prompts for ChatGPT/Claude to create and batch import customized homework packs!",
+      "Import your own SQLite databases or generate AI prompts for ChatGPT/Claude (with selectable batch sizes from 5 to 20 questions and custom topics) to create and batch import tailored question packs.",
     icon: <Database className="w-5 h-5 text-purple-400" />,
     placement: "bottom"
   }

@@ -554,6 +554,7 @@ export const SqlApp: React.FC = () => {
               <div className="flex items-center gap-2">
                 {/* Easy Database Switcher Button */}
                 <button
+                  data-tour="db-switcher-btn"
                   onClick={() => setShowDbSwitcher(true)}
                   title="Switch Database (Sakila, Northwind, World, or Upload Custom)"
                   className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-200 border border-sky-700/80 hover:border-sky-500 transition font-medium shadow-xs"
