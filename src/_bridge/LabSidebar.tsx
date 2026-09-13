@@ -27,6 +27,8 @@ export interface LabSidebarProps {
   githubUrl?: string;
   activeFilter?: string;
   onFilterChange?: (filter: string) => void;
+  filterCustom?: boolean;
+  onFilterCustomChange?: (onlyCustom: boolean) => void;
   activeTag?: string;
   activeTags?: string[];
   onTagChange?: (tag: string) => void;
@@ -53,12 +55,15 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   githubUrl,
   activeFilter: activeFilterProp,
   onFilterChange,
+  filterCustom: filterCustomProp,
+  onFilterCustomChange,
   activeTag: activeTagProp,
   activeTags: activeTagsProp,
   onTagChange,
   onTagsChange,
 }) => {
   const [internalFilter, setInternalFilter] = useState<string>("all");
+  const [internalFilterCustom, setInternalFilterCustom] = useState<boolean>(false);
   const [internalTags, setInternalTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -82,6 +87,15 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   }, [isTopicMenuOpen]);
 
   const activeFilter = activeFilterProp !== undefined ? activeFilterProp : internalFilter;
+  const filterCustom = filterCustomProp !== undefined ? filterCustomProp : internalFilterCustom;
+
+  const setFilterCustom = (val: boolean) => {
+    if (onFilterCustomChange) {
+      onFilterCustomChange(val);
+    } else {
+      setInternalFilterCustom(val);
+    }
+  };
 
   // Derive normalized selected tags list
   const selectedTags = useMemo<string[]>(() => {
@@ -173,18 +187,22 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
     return milestones
       .map((m, idx) => ({ m, idx }))
       .filter(({ m }) => {
-        if (activeFilter !== "all") {
-          if (activeFilter.toLowerCase() === "custom") {
-            const isCustomMilestone =
-              Boolean(m.isCustom) ||
-              (m.tags && m.tags.some((t) => t.toLowerCase() === "custom")) ||
-              (m.category ?? m.difficulty ?? "").toLowerCase() === "custom";
-            if (!isCustomMilestone) return false;
-          } else {
-            const cat = (m.category ?? m.difficulty ?? "").toLowerCase();
-            if (cat !== activeFilter.toLowerCase()) return false;
-          }
+        // 1. Custom Questions Filter
+        if (filterCustom) {
+          const isCustomMilestone =
+            Boolean(m.isCustom) ||
+            (m.tags && m.tags.some((t) => t.toLowerCase() === "custom")) ||
+            (m.category ?? m.difficulty ?? "").toLowerCase() === "custom";
+          if (!isCustomMilestone) return false;
         }
+
+        // 2. Difficulty / Category Filter
+        if (activeFilter !== "all") {
+          const cat = (m.category ?? m.difficulty ?? "").toLowerCase();
+          if (cat !== activeFilter.toLowerCase()) return false;
+        }
+
+        // 3. Multi-Select Tags Filter
         if (selectedTags.length > 0) {
           const mTags = (m.tags || []).map((t) => t.toLowerCase());
           const matches =
@@ -193,15 +211,18 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
               : selectedTags.some((t) => mTags.includes(t));
           if (!matches) return false;
         }
+
+        // 4. Free-Text Search
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchTitle = m.title.toLowerCase().includes(q);
           const matchTags = (m.tags || []).some((t) => t.toLowerCase().includes(q));
           if (!matchTitle && !matchTags) return false;
         }
+
         return true;
       });
-  }, [milestones, activeFilter, selectedTags, tagMatchMode, searchQuery]);
+  }, [milestones, filterCustom, activeFilter, selectedTags, tagMatchMode, searchQuery]);
 
   const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -269,10 +290,10 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                 <button
                   type="button"
                   data-test="custom-questions-toggle"
-                  onClick={() => setActiveFilter(activeFilter === "custom" ? "all" : "custom")}
-                  title={activeFilter === "custom" ? "Showing only your custom questions (click to clear)" : "Filter only your custom questions"}
+                  onClick={() => setFilterCustom(!filterCustom)}
+                  title={filterCustom ? "Showing only your custom questions (click to clear)" : "Filter only your custom questions"}
                   className={`text-[9px] px-1.5 py-0.2 rounded font-semibold border transition flex items-center gap-1 cursor-pointer shrink-0 ${
-                    activeFilter === "custom"
+                    filterCustom
                       ? "bg-purple-900 text-purple-200 border-purple-500 shadow-xs"
                       : "bg-purple-950/60 text-purple-300 border-purple-800/80 hover:bg-purple-900/60 hover:text-purple-100"
                   }`}
@@ -282,9 +303,10 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                 </button>
               )}
             </div>
-            {(activeFilter !== "all" || selectedTags.length > 0 || searchQuery) && (
+            {(filterCustom || activeFilter !== "all" || selectedTags.length > 0 || searchQuery) && (
               <button
                 onClick={() => {
+                  setFilterCustom(false);
                   setActiveFilter("all");
                   clearAllTags();
                   setSearchQuery("");
@@ -314,13 +336,24 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                     onChange={(e) => setActiveFilter(e.target.value)}
                     className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
                   >
-                    <option value="all">All ({milestones.length})</option>
+                    <option value="all">
+                      All ({filterCustom ? customMilestonesCount : milestones.length})
+                    </option>
                     {categories
                       .filter((cat) => cat !== "custom")
                       .map((cat) => {
-                        const count = milestones.filter(
-                          (m) => (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase()
-                        ).length;
+                        const count = milestones.filter((m) => {
+                          const catMatch = (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase();
+                          if (!catMatch) return false;
+                          if (filterCustom) {
+                            return (
+                              Boolean(m.isCustom) ||
+                              (m.tags && m.tags.some((t) => t.toLowerCase() === "custom")) ||
+                              (m.category ?? m.difficulty ?? "").toLowerCase() === "custom"
+                            );
+                          }
+                          return true;
+                        }).length;
                         return (
                           <option key={cat} value={cat}>
                             {capitalise(cat)} ({count})
@@ -526,15 +559,25 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
           </div>
 
           {/* Active Filter Badges */}
-          {(activeFilter !== "all" || selectedTags.length > 0) && (
+          {(filterCustom || activeFilter !== "all" || selectedTags.length > 0) && (
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
+              {filterCustom && (
+                <button
+                  onClick={() => setFilterCustom(false)}
+                  title="Remove custom questions filter"
+                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/80 hover:bg-purple-900 transition cursor-pointer"
+                >
+                  <span>★ Custom</span>
+                  <X className="w-2.5 h-2.5 text-purple-400" />
+                </button>
+              )}
               {activeFilter !== "all" && (
                 <button
                   onClick={() => setActiveFilter("all")}
-                  title="Remove filter"
+                  title="Remove difficulty filter"
                   className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700/80 hover:bg-sky-900 transition cursor-pointer"
                 >
-                  <span>{activeFilter === "custom" ? "★ Custom Questions" : capitalise(activeFilter)}</span>
+                  <span>{capitalise(activeFilter)}</span>
                   <X className="w-2.5 h-2.5 text-sky-400" />
                 </button>
               )}
@@ -549,12 +592,16 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                   <X className="w-2.5 h-2.5 text-purple-400" />
                 </button>
               ))}
-              {selectedTags.length > 1 && (
+              {((filterCustom ? 1 : 0) + (activeFilter !== "all" ? 1 : 0) + selectedTags.length > 1) && (
                 <button
-                  onClick={clearAllTags}
+                  onClick={() => {
+                    setFilterCustom(false);
+                    setActiveFilter("all");
+                    clearAllTags();
+                  }}
                   className="text-[9px] text-slate-400 hover:text-slate-200 transition underline ml-0.5 cursor-pointer"
                 >
-                  Clear all ({selectedTags.length})
+                  Clear all
                 </button>
               )}
             </div>
@@ -565,7 +612,7 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
       {/* ── Milestone List ── */}
       <div className="flex-1 overflow-y-auto py-2 px-1.5 space-y-1 min-h-0">
         <div className="px-2.5 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          {activeFilter === "all" && selectedTags.length === 0
+          {!filterCustom && activeFilter === "all" && selectedTags.length === 0
             ? "Course Milestones"
             : `Filtered · ${filteredMilestones.length} shown`}
         </div>

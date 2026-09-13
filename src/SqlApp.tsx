@@ -208,6 +208,7 @@ export const SqlApp: React.FC = () => {
   const [showDbSwitcher, setShowDbSwitcher] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
+  const [filterCustomChallenges, setFilterCustomChallenges] = useState<boolean>(false);
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const { hasUpdate, checkForUpdates } = useUpdateChecker();
   const [expectedColumns, setExpectedColumns] = useState<string[]>([]);
@@ -770,6 +771,8 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
+              filterCustom={filterCustomChallenges}
+              onFilterCustomChange={setFilterCustomChallenges}
               activeTags={activeTags}
               onTagsChange={setActiveTags}
             />
@@ -1227,6 +1230,8 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
+              filterCustom={filterCustomChallenges}
+              onFilterCustomChange={setFilterCustomChallenges}
               activeTags={activeTags}
               onTagsChange={setActiveTags}
             />
