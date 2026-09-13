@@ -15,6 +15,7 @@ import {
   Sparkles,
   HardDrive,
   ChevronDown,
+  ArrowRight,
 } from "lucide-react";
 import type { SqlChallenge } from "./challenges";
 import type { Database as SqlJsDatabase } from "sql.js";
@@ -55,7 +56,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   onClearCustomChallenges,
   completedMilestones,
   onResetProgress,
-  initialTab = "database",
+  initialTab = "prompt",
 }) => {
   const [activeTab, setActiveTab] = useState<"database" | "import" | "manage" | "prompt" | "export">(initialTab);
 
@@ -577,15 +578,15 @@ ${clarityDescriptions[promptClarity]}
         {/* Tab Switcher */}
         <div className="flex border-b border-slate-800 bg-slate-950 px-5 gap-1 text-xs font-semibold overflow-x-auto">
           <button
-            onClick={() => setActiveTab("database")}
+            onClick={() => setActiveTab("prompt")}
             className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
-              activeTab === "database"
+              activeTab === "prompt"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Database className="w-3.5 h-3.5 text-sky-400" />
-            <span>Database ({activeDbName.length > 15 ? activeDbName.slice(0, 15) + "…" : activeDbName})</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>AI Prompt Generator</span>
           </button>
           <button
             onClick={() => setActiveTab("import")}
@@ -610,15 +611,15 @@ ${clarityDescriptions[promptClarity]}
             <span>Manage Questions ({customChallenges.length})</span>
           </button>
           <button
-            onClick={() => setActiveTab("prompt")}
+            onClick={() => setActiveTab("database")}
             className={`py-2.5 px-3 border-b-2 transition whitespace-nowrap inline-flex items-center gap-1.5 ${
-              activeTab === "prompt"
+              activeTab === "database"
                 ? "border-sky-400 text-sky-300 font-bold"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>AI Prompt</span>
+            <Database className="w-3.5 h-3.5 text-sky-400" />
+            <span>Database ({activeDbName.length > 12 ? activeDbName.slice(0, 12) + "…" : activeDbName})</span>
           </button>
           <button
             onClick={() => setActiveTab("export")}
@@ -997,9 +998,44 @@ ${clarityDescriptions[promptClarity]}
             </div>
           )}
 
-          {/* TAB 4: AI Prompt Generator */}
+          {/* TAB 1: AI Prompt Generator */}
           {activeTab === "prompt" && (
             <div className="space-y-4">
+              {/* How-To Workflow Step Banner */}
+              <div className="p-3 bg-gradient-to-r from-sky-950/60 to-indigo-950/60 border border-sky-850 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-sky-300">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>How to Generate & Import Custom Question Packs</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("import")}
+                    className="text-[11px] font-semibold text-sky-400 hover:text-sky-200 underline inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Go to Batch Import</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-300">
+                  <div className="bg-slate-900/80 border border-slate-800/80 rounded-lg p-2.5 space-y-1">
+                    <div className="text-[10px] font-mono font-bold text-sky-400">STEP 1</div>
+                    <div className="font-semibold text-slate-200">Copy AI Prompt</div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Configured with your active schema tables and column names.</p>
+                  </div>
+                  <div className="bg-slate-900/80 border border-slate-800/80 rounded-lg p-2.5 space-y-1">
+                    <div className="text-[10px] font-mono font-bold text-amber-400">STEP 2</div>
+                    <div className="font-semibold text-slate-200">Generate with AI</div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Paste into ChatGPT, Claude, or DeepSeek to get compliant JSON.</p>
+                  </div>
+                  <div className="bg-slate-900/80 border border-slate-800/80 rounded-lg p-2.5 space-y-1">
+                    <div className="text-[10px] font-mono font-bold text-emerald-400">STEP 3</div>
+                    <div className="font-semibold text-slate-200">Paste & Validate</div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Switch to Batch Import, paste JSON, and load into your lab!</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                 <div className="flex flex-col justify-end h-full">
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1.5 h-4 leading-4 truncate" title="Batch Size (Questions)">

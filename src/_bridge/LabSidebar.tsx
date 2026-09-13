@@ -439,9 +439,9 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                   </div>
                 </button>
 
-                {/* Floating Multi-Select Popover Menu */}
+                {/* Floating Multi-Select Popover Menu (Fits within sidebar width) */}
                 {isTopicMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-64 max-h-72 flex flex-col bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="absolute right-0 top-full mt-1 w-[calc(200%+0.375rem)] min-w-[200px] max-w-[calc(100vw-1.5rem)] max-h-60 flex flex-col bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-100">
                     {/* Search inside tags */}
                     <div className="relative mb-2">
                       <Search className="w-3 h-3 text-slate-500 absolute left-2 top-2 pointer-events-none" />
