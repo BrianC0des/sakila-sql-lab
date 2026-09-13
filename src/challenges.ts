@@ -5,6 +5,7 @@ export interface SqlChallenge {
   title: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
+  tags?: string[];
   hints: string[];
   starterQuery: string;
   referenceSolution: string;
@@ -25,7 +26,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Add `ORDER BY length DESC` to place the longest films first."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rental_rate, length FROM film WHERE rating IN ('G', 'PG') AND rental_rate < 3.00 ORDER BY length DESC;"
+    "referenceSolution": "SELECT title, rental_rate, length FROM film WHERE rating IN ('G', 'PG') AND rental_rate < 3.00 ORDER BY length DESC;",
+    "tags": [
+      "select",
+      "where",
+      "order-by"
+    ]
   },
   {
     "id": "sakila-27-limit-offset",
@@ -39,7 +45,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Sort `ORDER BY title ASC` first so the pages are consistent."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title FROM film ORDER BY title ASC LIMIT 3 OFFSET 3;"
+    "referenceSolution": "SELECT title FROM film ORDER BY title ASC LIMIT 3 OFFSET 3;",
+    "tags": [
+      "limit",
+      "offset",
+      "pagination"
+    ]
   },
   {
     "id": "sakila-11-distinct",
@@ -53,7 +64,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Sort with `ORDER BY rating ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT DISTINCT rating FROM film ORDER BY rating ASC;"
+    "referenceSolution": "SELECT DISTINCT rating FROM film ORDER BY rating ASC;",
+    "tags": [
+      "distinct",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-10-like-wildcards",
@@ -67,7 +82,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Add `ORDER BY rental_rate DESC, title ASC LIMIT 5` to get the top 5 most expensive."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rating, rental_rate FROM film WHERE title LIKE 'A%' ORDER BY rental_rate DESC, title ASC LIMIT 5;"
+    "referenceSolution": "SELECT title, rating, rental_rate FROM film WHERE title LIKE 'A%' ORDER BY rental_rate DESC, title ASC LIMIT 5;",
+    "tags": [
+      "like",
+      "wildcards",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-12-between-in",
@@ -81,7 +101,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Combine both conditions with `AND`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rental_rate, length FROM film WHERE rental_rate BETWEEN 0.99 AND 2.99 AND rating IN ('G', 'PG') ORDER BY length DESC;"
+    "referenceSolution": "SELECT title, rental_rate, length FROM film WHERE rental_rate BETWEEN 0.99 AND 2.99 AND rating IN ('G', 'PG') ORDER BY length DESC;",
+    "tags": [
+      "between",
+      "in",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-25-not-in-filter",
@@ -95,7 +120,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Order by `rating ASC, title ASC` for a clean grouped result."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rating FROM film WHERE rating NOT IN ('G', 'PG') ORDER BY rating ASC, title ASC;"
+    "referenceSolution": "SELECT title, rating FROM film WHERE rating NOT IN ('G', 'PG') ORDER BY rating ASC, title ASC;",
+    "tags": [
+      "not-in",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-13-null-check",
@@ -109,7 +138,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Join `customer c` → `rental r ON c.customer_id = r.customer_id` → `film f ON r.film_id = f.film_id`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, f.title FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id WHERE r.return_date IS NULL ORDER BY c.last_name ASC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, f.title FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id WHERE r.return_date IS NULL ORDER BY c.last_name ASC;",
+    "tags": [
+      "null",
+      "is-null",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-26-is-not-null",
@@ -123,7 +157,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Add `LIMIT 5` after `ORDER BY return_date ASC` to get the 5 earliest returns."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, f.title, r.return_date FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id WHERE r.return_date IS NOT NULL ORDER BY r.return_date ASC LIMIT 5;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, f.title, r.return_date FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id WHERE r.return_date IS NOT NULL ORDER BY r.return_date ASC LIMIT 5;",
+    "tags": [
+      "null",
+      "is-not-null",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-14-aggregate-summary",
@@ -137,7 +176,14 @@ export const sqlChallenges: SqlChallenge[] = [
       "Alias each column: `AS total_films`, `AS cheapest`, `AS most_expensive`, `AS avg_rate`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT COUNT(*) AS total_films, MIN(rental_rate) AS cheapest, MAX(rental_rate) AS most_expensive, ROUND(AVG(rental_rate), 2) AS avg_rate FROM film;"
+    "referenceSolution": "SELECT COUNT(*) AS total_films, MIN(rental_rate) AS cheapest, MAX(rental_rate) AS most_expensive, ROUND(AVG(rental_rate), 2) AS avg_rate FROM film;",
+    "tags": [
+      "aggregates",
+      "count",
+      "avg",
+      "min",
+      "max"
+    ]
   },
   {
     "id": "sakila-24-and-or-parentheses",
@@ -151,7 +197,13 @@ export const sqlChallenges: SqlChallenge[] = [
       "Order by `rating ASC` first, then `length DESC` for ties."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rating, length FROM film WHERE (rating IN ('G','PG') AND length > 100) OR rating = 'NC-17' ORDER BY rating ASC, length DESC;"
+    "referenceSolution": "SELECT title, rating, length FROM film WHERE (rating IN ('G','PG') AND length > 100) OR rating = 'NC-17' ORDER BY rating ASC, length DESC;",
+    "tags": [
+      "boolean-logic",
+      "and",
+      "or",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-15-group-by-rating",
@@ -165,7 +217,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Sort by `total_films DESC` first, then `rating ASC` to break ties alphabetically."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT rating, COUNT(*) AS total_films FROM film GROUP BY rating ORDER BY total_films DESC, rating ASC;"
+    "referenceSolution": "SELECT rating, COUNT(*) AS total_films FROM film GROUP BY rating ORDER BY total_films DESC, rating ASC;",
+    "tags": [
+      "group-by",
+      "aggregates"
+    ]
   },
   {
     "id": "sakila-03-group-by-count",
@@ -179,7 +235,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Group by `c.category_id, c.name` and sort by `total_films DESC, c.name ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.name, COUNT(fc.film_id) AS total_films FROM category c JOIN film_category fc ON c.category_id = fc.category_id GROUP BY c.category_id, c.name ORDER BY total_films DESC, c.name ASC;"
+    "referenceSolution": "SELECT c.name, COUNT(fc.film_id) AS total_films FROM category c JOIN film_category fc ON c.category_id = fc.category_id GROUP BY c.category_id, c.name ORDER BY total_films DESC, c.name ASC;",
+    "tags": [
+      "group-by",
+      "count",
+      "aggregates"
+    ]
   },
   {
     "id": "sakila-16-having-filter",
@@ -193,7 +254,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "You can also write `HAVING total_films > 1` in SQLite — both work."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT rating, COUNT(*) AS total_films FROM film GROUP BY rating HAVING COUNT(*) > 1 ORDER BY total_films DESC, rating ASC;"
+    "referenceSolution": "SELECT rating, COUNT(*) AS total_films FROM film GROUP BY rating HAVING COUNT(*) > 1 ORDER BY total_films DESC, rating ASC;",
+    "tags": [
+      "having",
+      "group-by",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-04-having-filter",
@@ -207,7 +273,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Order by `total_films DESC, c.name ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.name, COUNT(fc.film_id) AS total_films FROM category c JOIN film_category fc ON c.category_id = fc.category_id GROUP BY c.category_id, c.name HAVING COUNT(fc.film_id) >= 2 ORDER BY total_films DESC, c.name ASC;"
+    "referenceSolution": "SELECT c.name, COUNT(fc.film_id) AS total_films FROM category c JOIN film_category fc ON c.category_id = fc.category_id GROUP BY c.category_id, c.name HAVING COUNT(fc.film_id) >= 2 ORDER BY total_films DESC, c.name ASC;",
+    "tags": [
+      "having",
+      "aggregates",
+      "filtering"
+    ]
   },
   {
     "id": "sakila-17-case-length-category",
@@ -221,7 +292,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Check the shortest condition first: `WHEN length < 60 THEN 'Short'`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, length, CASE WHEN length < 60 THEN 'Short' WHEN length <= 120 THEN 'Medium' ELSE 'Long' END AS length_category FROM film ORDER BY length ASC;"
+    "referenceSolution": "SELECT title, length, CASE WHEN length < 60 THEN 'Short' WHEN length <= 120 THEN 'Medium' ELSE 'Long' END AS length_category FROM film ORDER BY length ASC;",
+    "tags": [
+      "case-when",
+      "conditional-logic"
+    ]
   },
   {
     "id": "sakila-18-case-price-tier",
@@ -235,7 +310,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Alias the CASE expression as `AS price_tier`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rental_rate, CASE WHEN rental_rate < 1.00 THEN 'Budget' WHEN rental_rate < 3.00 THEN 'Standard' ELSE 'Premium' END AS price_tier FROM film ORDER BY rental_rate ASC, title ASC;"
+    "referenceSolution": "SELECT title, rental_rate, CASE WHEN rental_rate < 1.00 THEN 'Budget' WHEN rental_rate < 3.00 THEN 'Standard' ELSE 'Premium' END AS price_tier FROM film ORDER BY rental_rate ASC, title ASC;",
+    "tags": [
+      "case-when",
+      "conditional-logic"
+    ]
   },
   {
     "id": "sakila-02-inner-join",
@@ -249,7 +328,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Alias `category.name` as `category_name` and sort by `title ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT f.title, c.name AS category_name, f.rental_rate FROM film f JOIN film_category fc ON f.film_id = fc.film_id JOIN category c ON fc.category_id = c.category_id ORDER BY f.title ASC;"
+    "referenceSolution": "SELECT f.title, c.name AS category_name, f.rental_rate FROM film f JOIN film_category fc ON f.film_id = fc.film_id JOIN category c ON fc.category_id = c.category_id ORDER BY f.title ASC;",
+    "tags": [
+      "inner-join",
+      "joins"
+    ]
   },
   {
     "id": "sakila-06-many-to-many-inner-join",
@@ -263,7 +346,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Filter with `WHERE a.last_name = 'GUINESS'` and sort with `ORDER BY f.title ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT a.first_name, a.last_name, f.title FROM actor a JOIN film_actor fa ON a.actor_id = fa.actor_id JOIN film f ON fa.film_id = f.film_id WHERE a.last_name = 'GUINESS' ORDER BY f.title ASC;"
+    "referenceSolution": "SELECT a.first_name, a.last_name, f.title FROM actor a JOIN film_actor fa ON a.actor_id = fa.actor_id JOIN film f ON fa.film_id = f.film_id WHERE a.last_name = 'GUINESS' ORDER BY f.title ASC;",
+    "tags": [
+      "inner-join",
+      "joins",
+      "many-to-many"
+    ]
   },
   {
     "id": "sakila-07-left-outer-join",
@@ -277,7 +365,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Group by `c.customer_id, c.first_name, c.last_name`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.customer_id, c.first_name, c.last_name, COUNT(r.rental_id) AS rental_count FROM customer c LEFT JOIN rental r ON c.customer_id = r.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY rental_count ASC, c.customer_id ASC;"
+    "referenceSolution": "SELECT c.customer_id, c.first_name, c.last_name, COUNT(r.rental_id) AS rental_count FROM customer c LEFT JOIN rental r ON c.customer_id = r.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY rental_count ASC, c.customer_id ASC;",
+    "tags": [
+      "left-join",
+      "joins",
+      "null"
+    ]
   },
   {
     "id": "sakila-21-join-group-spend",
@@ -291,7 +384,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Group by the customer's full identity: `GROUP BY c.customer_id, c.first_name, c.last_name`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY total_spent DESC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY total_spent DESC;",
+    "tags": [
+      "joins",
+      "group-by",
+      "aggregates"
+    ]
   },
   {
     "id": "sakila-29-having-popular-films",
@@ -305,7 +403,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "`HAVING COUNT(r.rental_id) > 1` keeps only films rented more than once."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT f.title, COUNT(r.rental_id) AS times_rented FROM film f JOIN rental r ON f.film_id = r.film_id GROUP BY f.film_id, f.title HAVING COUNT(r.rental_id) > 1 ORDER BY times_rented DESC, f.title ASC;"
+    "referenceSolution": "SELECT f.title, COUNT(r.rental_id) AS times_rented FROM film f JOIN rental r ON f.film_id = r.film_id GROUP BY f.film_id, f.title HAVING COUNT(r.rental_id) > 1 ORDER BY times_rented DESC, f.title ASC;",
+    "tags": [
+      "joins",
+      "group-by",
+      "having"
+    ]
   },
   {
     "id": "sakila-19-subquery-scalar",
@@ -319,7 +422,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "The average rental rate in this dataset is ~$3.32 — so 'Premium' films will qualify."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT title, rental_rate FROM film WHERE rental_rate > (SELECT AVG(rental_rate) FROM film) ORDER BY rental_rate DESC, title ASC;"
+    "referenceSolution": "SELECT title, rental_rate FROM film WHERE rental_rate > (SELECT AVG(rental_rate) FROM film) ORDER BY rental_rate DESC, title ASC;",
+    "tags": [
+      "subquery",
+      "scalar-subquery"
+    ]
   },
   {
     "id": "sakila-20-subquery-in",
@@ -333,7 +440,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Each customer only appears once in the result — `IN` handles the deduplication automatically."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT first_name, last_name FROM customer WHERE customer_id IN (SELECT customer_id FROM payment WHERE amount >= 4.99) ORDER BY last_name ASC;"
+    "referenceSolution": "SELECT first_name, last_name FROM customer WHERE customer_id IN (SELECT customer_id FROM payment WHERE amount >= 4.99) ORDER BY last_name ASC;",
+    "tags": [
+      "subquery",
+      "in"
+    ]
   },
   {
     "id": "sakila-28-not-in-subquery",
@@ -347,7 +458,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Alternative approach: LEFT JOIN payment WHERE payment_id IS NULL — both are valid."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT first_name, last_name FROM customer WHERE customer_id NOT IN (SELECT customer_id FROM payment) ORDER BY last_name ASC;"
+    "referenceSolution": "SELECT first_name, last_name FROM customer WHERE customer_id NOT IN (SELECT customer_id FROM payment) ORDER BY last_name ASC;",
+    "tags": [
+      "subquery",
+      "not-in",
+      "null"
+    ]
   },
   {
     "id": "sakila-05-multi-table-revenue",
@@ -361,7 +477,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Group by `c.customer_id, c.first_name, c.last_name` and order by `total_spent DESC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, COUNT(p.payment_id) AS total_rentals, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY total_spent DESC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, COUNT(p.payment_id) AS total_rentals, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY total_spent DESC;",
+    "tags": [
+      "joins",
+      "multi-table",
+      "group-by"
+    ]
   },
   {
     "id": "sakila-23-join-group-having",
@@ -375,7 +496,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "WHERE filters individual rows; HAVING filters aggregated groups."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name HAVING SUM(p.amount) > 5.00 ORDER BY total_spent DESC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id GROUP BY c.customer_id, c.first_name, c.last_name HAVING SUM(p.amount) > 5.00 ORDER BY total_spent DESC;",
+    "tags": [
+      "joins",
+      "group-by",
+      "having"
+    ]
   },
   {
     "id": "sakila-22-left-join-null-pattern",
@@ -389,7 +515,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Filter: `WHERE r.rental_id IS NULL` — these are the customers with no rentals."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name FROM customer c LEFT JOIN rental r ON c.customer_id = r.customer_id WHERE r.rental_id IS NULL ORDER BY c.last_name ASC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name FROM customer c LEFT JOIN rental r ON c.customer_id = r.customer_id WHERE r.rental_id IS NULL ORDER BY c.last_name ASC;",
+    "tags": [
+      "left-join",
+      "null",
+      "anti-join"
+    ]
   },
   {
     "id": "sakila-36-left-join-on-filter",
@@ -403,7 +534,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "`COUNT(p.payment_id)` returns 0 for customers with no matching payments since their `payment_id` will be NULL."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.customer_id, c.first_name, c.last_name, COUNT(p.payment_id) AS premium_payments FROM customer c LEFT JOIN payment p ON c.customer_id = p.customer_id AND p.amount >= 4.99 GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY premium_payments DESC, c.customer_id ASC;"
+    "referenceSolution": "SELECT c.customer_id, c.first_name, c.last_name, COUNT(p.payment_id) AS premium_payments FROM customer c LEFT JOIN payment p ON c.customer_id = p.customer_id AND p.amount >= 4.99 GROUP BY c.customer_id, c.first_name, c.last_name ORDER BY premium_payments DESC, c.customer_id ASC;",
+    "tags": [
+      "left-join",
+      "on-vs-where",
+      "traps"
+    ]
   },
   {
     "id": "sakila-09-four-table-audit-join",
@@ -417,7 +553,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Order by `p.payment_date ASC, f.title ASC`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name || ' ' || c.last_name AS customer_name, f.title AS film_title, p.amount, p.payment_date FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id JOIN payment p ON r.rental_id = p.rental_id WHERE p.amount >= 4.99 ORDER BY p.payment_date ASC, f.title ASC;"
+    "referenceSolution": "SELECT c.first_name || ' ' || c.last_name AS customer_name, f.title AS film_title, p.amount, p.payment_date FROM customer c JOIN rental r ON c.customer_id = r.customer_id JOIN film f ON r.film_id = f.film_id JOIN payment p ON r.rental_id = p.rental_id WHERE p.amount >= 4.99 ORDER BY p.payment_date ASC, f.title ASC;",
+    "tags": [
+      "joins",
+      "multi-table",
+      "audit"
+    ]
   },
   {
     "id": "sakila-32-five-table-genre-revenue",
@@ -431,7 +572,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Add `ORDER BY revenue DESC LIMIT 5` to see the most profitable genres."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT cat.name AS category, SUM(p.amount) AS revenue FROM payment p JOIN rental r ON p.rental_id = r.rental_id JOIN film_category fc ON r.film_id = fc.film_id JOIN category cat ON fc.category_id = cat.category_id GROUP BY cat.category_id, cat.name ORDER BY revenue DESC LIMIT 5;"
+    "referenceSolution": "SELECT cat.name AS category, SUM(p.amount) AS revenue FROM payment p JOIN rental r ON p.rental_id = r.rental_id JOIN film_category fc ON r.film_id = fc.film_id JOIN category cat ON fc.category_id = cat.category_id GROUP BY cat.category_id, cat.name ORDER BY revenue DESC LIMIT 5;",
+    "tags": [
+      "joins",
+      "multi-table",
+      "aggregates"
+    ]
   },
   {
     "id": "sakila-08-self-join",
@@ -445,7 +591,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "Add `f1.film_id < f2.film_id` in the ON/WHERE clause to eliminate identical pairs (A, A) and reverse mirrors (B, A)."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT f1.title AS film_1, f2.title AS film_2, f1.rating, f1.rental_rate FROM film f1 JOIN film f2 ON f1.rating = f2.rating AND f1.rental_rate = f2.rental_rate AND f1.film_id < f2.film_id ORDER BY f1.rental_rate DESC, f1.title ASC;"
+    "referenceSolution": "SELECT f1.title AS film_1, f2.title AS film_2, f1.rating, f1.rental_rate FROM film f1 JOIN film f2 ON f1.rating = f2.rating AND f1.rental_rate = f2.rental_rate AND f1.film_id < f2.film_id ORDER BY f1.rental_rate DESC, f1.title ASC;",
+    "tags": [
+      "self-join",
+      "joins"
+    ]
   },
   {
     "id": "sakila-33-self-join",
@@ -459,7 +609,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "The `f1.film_id < f2.film_id` guard prevents showing (A,B) and (B,A) as two separate rows — each pair appears only once."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT f1.title AS film_1, f2.title AS film_2, f1.rental_rate, f1.rating FROM film f1 JOIN film f2 ON f1.rental_rate = f2.rental_rate AND f1.rating = f2.rating AND f1.film_id < f2.film_id ORDER BY f1.rental_rate DESC, f1.title ASC;"
+    "referenceSolution": "SELECT f1.title AS film_1, f2.title AS film_2, f1.rental_rate, f1.rating FROM film f1 JOIN film f2 ON f1.rental_rate = f2.rental_rate AND f1.rating = f2.rating AND f1.film_id < f2.film_id ORDER BY f1.rental_rate DESC, f1.title ASC;",
+    "tags": [
+      "self-join",
+      "joins"
+    ]
   },
   {
     "id": "sakila-30-case-group-by",
@@ -473,7 +627,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Three tiers: Budget (rental_rate < 1.00), Standard (rental_rate < 3.00), Premium (everything else)."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT CASE WHEN rental_rate < 1.00 THEN 'Budget' WHEN rental_rate < 3.00 THEN 'Standard' ELSE 'Premium' END AS price_tier, COUNT(*) AS total_films FROM film GROUP BY price_tier ORDER BY total_films DESC;"
+    "referenceSolution": "SELECT CASE WHEN rental_rate < 1.00 THEN 'Budget' WHEN rental_rate < 3.00 THEN 'Standard' ELSE 'Premium' END AS price_tier, COUNT(*) AS total_films FROM film GROUP BY price_tier ORDER BY total_films DESC;",
+    "tags": [
+      "case-when",
+      "group-by",
+      "aggregates"
+    ]
   },
   {
     "id": "sakila-31-where-group-having",
@@ -487,7 +646,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Group by `c.customer_id, c.first_name, c.last_name`; count payments with `COUNT(p.payment_id) AS num_payments`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name, c.last_name, COUNT(p.payment_id) AS num_payments, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id WHERE c.active = 1 GROUP BY c.customer_id, c.first_name, c.last_name HAVING SUM(p.amount) > 5.00 ORDER BY total_spent DESC;"
+    "referenceSolution": "SELECT c.first_name, c.last_name, COUNT(p.payment_id) AS num_payments, SUM(p.amount) AS total_spent FROM customer c JOIN payment p ON c.customer_id = p.customer_id WHERE c.active = 1 GROUP BY c.customer_id, c.first_name, c.last_name HAVING SUM(p.amount) > 5.00 ORDER BY total_spent DESC;",
+    "tags": [
+      "where",
+      "group-by",
+      "having"
+    ]
   },
   {
     "id": "sakila-34-count-star-vs-count-col",
@@ -501,7 +665,12 @@ export const sqlChallenges: SqlChallenge[] = [
       "Concatenate names with `c.first_name || ' ' || c.last_name AS full_name` and group by `c.customer_id, full_name`."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT c.first_name || ' ' || c.last_name AS full_name, COUNT(*) AS total_rentals, COUNT(r.return_date) AS returned_rentals FROM customer c JOIN rental r ON c.customer_id = r.customer_id GROUP BY c.customer_id, full_name ORDER BY total_rentals DESC, full_name ASC;"
+    "referenceSolution": "SELECT c.first_name || ' ' || c.last_name AS full_name, COUNT(*) AS total_rentals, COUNT(r.return_date) AS returned_rentals FROM customer c JOIN rental r ON c.customer_id = r.customer_id GROUP BY c.customer_id, full_name ORDER BY total_rentals DESC, full_name ASC;",
+    "tags": [
+      "aggregates",
+      "count",
+      "null"
+    ]
   },
   {
     "id": "sakila-35-date-aggregation",
@@ -515,6 +684,11 @@ export const sqlChallenges: SqlChallenge[] = [
       "`ROUND(SUM(amount), 2)` rounds the revenue total to 2 decimal places."
     ],
     "starterQuery": "",
-    "referenceSolution": "SELECT DATE(payment_date) AS pay_date, COUNT(*) AS transactions, ROUND(SUM(amount), 2) AS daily_revenue FROM payment GROUP BY pay_date ORDER BY pay_date ASC;"
+    "referenceSolution": "SELECT DATE(payment_date) AS pay_date, COUNT(*) AS transactions, ROUND(SUM(amount), 2) AS daily_revenue FROM payment GROUP BY pay_date ORDER BY pay_date ASC;",
+    "tags": [
+      "date-functions",
+      "group-by",
+      "aggregates"
+    ]
   }
 ];

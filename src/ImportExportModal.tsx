@@ -73,6 +73,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   const [promptCount, setPromptCount] = useState<number>(10);
   const [promptTopic, setPromptTopic] = useState<"balanced" | "basics" | "aggregations" | "joins" | "advanced">("balanced");
+  const [promptCustomTags, setPromptCustomTags] = useState<string>("joins, aggregates, filtering");
 
   if (!isOpen) return null;
 
@@ -98,6 +99,7 @@ ${tableListStr}
 
 ### TOPIC FOCUS:
 ${topicDescriptions[promptTopic]}
+${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : ""}
 
 ### OUTPUT FORMAT REQUIREMENTS:
 1. Return ONLY a single raw JSON object matching the schema below.
@@ -106,6 +108,7 @@ ${topicDescriptions[promptTopic]}
 4. Set \`requireOrder: true\` whenever the prompt instructs students to sort/order their results.
 5. Provide 2-3 progressive, pedagogical hints per challenge (Hint 1: concept/clause, Hint 2: syntax tip, Hint 3: tricky edge cases).
 6. Ensure EVERY \`referenceSolution\` is 100% valid SQLite syntax against the exact table and column names listed above.
+7. Assign 2-4 lowercase topic \`tags\` to each challenge representing concepts used (e.g. ["joins", "inner-join"], ["aggregates", "group-by"], ["subqueries"], ["filtering", "where"]).
 
 ### JSON STRUCTURE:
 {
@@ -115,6 +118,7 @@ ${topicDescriptions[promptTopic]}
       "title": "Clear & Concise Milestone Title",
       "description": "Step-by-step instructions specifying which columns to select, which table(s) to query, filters to apply, and sorting/limit requirements.",
       "difficulty": "beginner",
+      "tags": ["select", "where", "order-by"],
       "requireOrder": true,
       "hints": [
         "First hint describing which SQL clause to use.",
@@ -128,6 +132,7 @@ ${topicDescriptions[promptTopic]}
       "title": "Another Challenge Title",
       "description": "Clear challenge instructions with expected columns and conditions.",
       "difficulty": "intermediate",
+      "tags": ["aggregates", "group-by"],
       "requireOrder": false,
       "hints": [
         "Hint explaining GROUP BY and aggregate functions."
@@ -249,6 +254,9 @@ ${topicDescriptions[promptTopic]}
             title,
             description: item.description || "",
             difficulty: item.difficulty || "intermediate",
+            tags: Array.isArray(item.tags) && item.tags.length > 0
+              ? item.tags.map((t: any) => String(t).toLowerCase().trim())
+              : [(item.difficulty || "custom").toLowerCase()],
             requireOrder: item.requireOrder ?? true,
             hints: Array.isArray(item.hints) ? item.hints : [],
             starterQuery: "",
@@ -604,20 +612,20 @@ ${topicDescriptions[promptTopic]}
           {/* TAB 4: AI Prompt Generator */}
           {activeTab === "prompt" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-slate-800 bg-slate-950/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                    Batch Size
+                    Batch Size (Questions)
                   </label>
                   <select
                     value={promptCount}
                     onChange={(e) => setPromptCount(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500"
                   >
-                    <option value={5}>5 Questions (Quick Quiz)</option>
-                    <option value={10}>10 Questions (Standard Homework)</option>
-                    <option value={15}>15 Questions (Full Lab Assignment)</option>
-                    <option value={20}>20 Questions (Comprehensive Exam Prep)</option>
+                    <option value={5}>5 Questions (Quick Review)</option>
+                    <option value={10}>10 Questions (Standard Quiz)</option>
+                    <option value={15}>15 Questions (Deep Practice)</option>
+                    <option value={20}>20 Questions (Full Exam Prep)</option>
                   </select>
                 </div>
 
@@ -628,7 +636,7 @@ ${topicDescriptions[promptTopic]}
                   <select
                     value={promptTopic}
                     onChange={(e) => setPromptTopic(e.target.value as any)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500"
                   >
                     <option value="balanced">Balanced Progression (Beginner → Adv)</option>
                     <option value="basics">Foundations (SELECT, WHERE, LIMIT)</option>
@@ -636,6 +644,19 @@ ${topicDescriptions[promptTopic]}
                     <option value="joins">Relational JOINs (INNER, LEFT, Multi-table)</option>
                     <option value="advanced">Advanced (Subqueries, CASE WHEN, DATE)</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Target Tags (Comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={promptCustomTags}
+                    onChange={(e) => setPromptCustomTags(e.target.value)}
+                    placeholder="e.g. joins, subqueries, null"
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 font-mono"
+                  />
                 </div>
               </div>
 

@@ -33,8 +33,14 @@ import {
   BookOpen,
   Lightbulb,
   Check,
+  GitFork,
+  Clock,
+  History,
 } from "lucide-react";
 import { SqlCodeEditor } from "./SqlCodeEditor";
+import { ErdModal } from "./ErdModal";
+import { QueryHistoryModal, type QueryHistoryItem } from "./QueryHistoryModal";
+import { ResultTableViewer } from "./ResultTableViewer";
 
 interface SchemaTable {
   name: string;
@@ -116,6 +122,12 @@ export const SqlApp: React.FC = () => {
   const [showDbSwitcher, setShowDbSwitcher] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
+  const [activeTag, setActiveTag] = useState<string>("all");
+  const [expectedColumns, setExpectedColumns] = useState<string[]>([]);
+  const [expectedRows, setExpectedRows] = useState<Record<string, any>[]>([]);
+  const [resultTab, setResultTab] = useState<"user" | "expected" | "diff">("user");
+  const [showErdModal, setShowErdModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [isMobile, setIsMobile] = useState(() => {
     try {
       return typeof window !== "undefined" && window.innerWidth < 768;
@@ -180,6 +192,33 @@ export const SqlApp: React.FC = () => {
       console.warn("Could not save custom challenges to localStorage", e);
     }
   }, [customChallenges, dbKey, isDefaultSakila]);
+
+  // Query Execution History
+  const [queryHistory, setQueryHistory] = useState<QueryHistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`sql_history_${dbKey}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`sql_history_${dbKey}`);
+      setQueryHistory(saved ? JSON.parse(saved) : []);
+    } catch {
+      setQueryHistory([]);
+    }
+  }, [dbKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`sql_history_${dbKey}`, JSON.stringify(queryHistory.slice(0, 50)));
+    } catch (e) {
+      console.warn("Could not save query history", e);
+    }
+  }, [queryHistory, dbKey]);
 
   // Bounds guard if challenges length changes
   useEffect(() => {
@@ -371,6 +410,9 @@ export const SqlApp: React.FC = () => {
     setUserQuery(challenge?.starterQuery || "");
     setUserRows([]);
     setUserColumns([]);
+    setExpectedRows([]);
+    setExpectedColumns([]);
+    setResultTab("user");
     setErrorMessage(null);
     setTestResults([]);
     setShowHints(false);
@@ -524,8 +566,9 @@ export const SqlApp: React.FC = () => {
       // 3. Evaluate against reference query
       const refRes = db.exec(activeChallenge.referenceSolution);
       let refRows: Record<string, any>[] = [];
+      let refCols: string[] = [];
       if (refRes.length > 0) {
-        const refCols = refRes[0].columns;
+        refCols = refRes[0].columns;
         refRows = refRes[0].values.map((v) => {
           const row: Record<string, any> = {};
           refCols.forEach((col, i) => {
@@ -534,6 +577,9 @@ export const SqlApp: React.FC = () => {
           return row;
         });
       }
+
+      setExpectedColumns(refCols);
+      setExpectedRows(refRows);
 
       const evaluation = evaluateSqlQuery(rows, refRows, {
         requireOrder: activeChallenge.requireOrder,
@@ -552,6 +598,18 @@ export const SqlApp: React.FC = () => {
           message: evaluation.message,
         },
       ]);
+
+      // Record to history
+      const historyItem: QueryHistoryItem = {
+        id: `qh-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        query: userQuery,
+        timestamp: Date.now(),
+        durationMs: elapsed,
+        rowCount: rows.length,
+        passed: evaluation.passed,
+        challengeTitle: activeChallenge.title,
+      };
+      setQueryHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
     } catch (err: any) {
       setErrorMessage(err.message || "SQL Error");
       setTestResults([
@@ -561,6 +619,16 @@ export const SqlApp: React.FC = () => {
           message: err.message || "Execution error",
         },
       ]);
+      const historyItem: QueryHistoryItem = {
+        id: `qh-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        query: userQuery,
+        timestamp: Date.now(),
+        durationMs: performance.now() - start,
+        rowCount: 0,
+        passed: false,
+        challengeTitle: activeChallenge.title,
+      };
+      setQueryHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
     }
   };
 
@@ -582,6 +650,7 @@ export const SqlApp: React.FC = () => {
                 id: c.id,
                 title: c.title,
                 category: c.difficulty,
+                tags: c.tags,
               }))}
               currentIndex={currentIdx}
               completedIds={completedMilestones}
@@ -589,6 +658,8 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
             />
           </div>
         }
@@ -667,6 +738,16 @@ export const SqlApp: React.FC = () => {
                 >
                   <Layers className="w-3.5 h-3.5 text-purple-400" />
                   <span className="hidden md:inline">Question Packs</span>
+                </button>
+
+                {/* ERD Schema Map Button */}
+                <button
+                  onClick={() => setShowErdModal(true)}
+                  title="Open Visual ERD & Schema Relationship Explorer"
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-sky-100 border border-slate-700 hover:border-sky-500 transition font-medium"
+                >
+                  <GitFork className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="hidden md:inline">ERD Map</span>
                 </button>
 
                 {appMode === "lab" && (
@@ -776,6 +857,27 @@ export const SqlApp: React.FC = () => {
                     {activeChallenge.description}
                   </p>
 
+                  {/* Interactive Topic Tags */}
+                  {activeChallenge.tags && activeChallenge.tags.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-slate-800/60">
+                      <span className="text-[10px] text-slate-500 font-mono">Topics:</span>
+                      {activeChallenge.tags.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setActiveTag(t)}
+                          title={`Filter by topic #${t}`}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded transition ${
+                            activeTag === t
+                              ? "bg-sky-900 text-sky-200 border border-sky-500 font-bold"
+                              : "bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                          }`}
+                        >
+                          #{t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Inline Collapsible Hints */}
                   {showHints && activeChallenge.hints && activeChallenge.hints.length > 0 && (
                     <div className="mt-2.5 p-3 rounded-lg bg-amber-950/30 border border-amber-850 space-y-1.5 text-xs">
@@ -839,6 +941,19 @@ export const SqlApp: React.FC = () => {
                               Format SQL
                             </button>
                             <button
+                              onClick={() => setShowHistoryModal(true)}
+                              title="View SQL Execution History"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 hover:border-slate-600 transition font-mono text-[10px] font-medium active:scale-95"
+                            >
+                              <History className="w-3 h-3 text-amber-400" />
+                              <span>History</span>
+                              {queryHistory.length > 0 && (
+                                <span className="text-[9px] px-1 rounded-full bg-slate-900 text-amber-300 border border-amber-800/60 font-mono">
+                                  {queryHistory.length}
+                                </span>
+                              )}
+                            </button>
+                            <button
                               onClick={() => setUserQuery("")}
                               title="Clear Editor"
                               className="inline-flex items-center gap-1 px-1.5 py-1 rounded bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-slate-700 transition text-[10px]"
@@ -870,68 +985,18 @@ export const SqlApp: React.FC = () => {
                           maxSize={400}
                           primary="second"
                           firstPane={
-                            <div className="flex-1 p-3 overflow-auto h-full w-full min-h-0 bg-slate-925">
-                              {testResults.length > 0 && (
-                                testResults[0].passed ? (
-                                  <div className="p-2.5 mb-2.5 rounded bg-emerald-950/60 border border-emerald-700/80 text-emerald-300 text-xs font-semibold flex items-center justify-between">
-                                    <span className="flex items-center gap-1.5">
-                                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                      All assertions passed! Milestone completed.
-                                    </span>
-                                    {nextMilestone && (
-                                      <button
-                                        onClick={handleAdvanceMilestone}
-                                        className="px-2.5 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-mono text-[11px] transition shadow-sm"
-                                      >
-                                        {nextMilestone.label}
-                                      </button>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="p-2.5 mb-2.5 rounded bg-amber-950/60 border border-amber-700/80 text-amber-200 text-xs">
-                                    <strong>Assertion Failed:</strong> {testResults[0].message}
-                                  </div>
-                                )
-                              )}
-                              {errorMessage ? (
-                                <div className="p-4 rounded bg-red-950/40 border border-red-500/40 text-red-200 text-xs font-mono">
-                                  <strong>SQL Syntax Error:</strong> {errorMessage}
-                                </div>
-                              ) : userRows.length === 0 ? (
-                                <div className="flex items-center justify-center h-full text-xs text-slate-500">
-                                  Press "Run Query" or Ctrl+Enter to execute.
-                                </div>
-                              ) : (
-                                <div className="border border-slate-800 rounded overflow-hidden">
-                                  <table className="w-full text-xs font-mono border-collapse text-left">
-                                    <thead>
-                                      <tr className="bg-slate-800 text-slate-300 border-b border-slate-700">
-                                        {userColumns.map((col) => (
-                                          <th key={col} className="p-2 border-r border-slate-700 last:border-r-0">
-                                            {col}
-                                          </th>
-                                        ))}
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {userRows.map((row, rIdx) => (
-                                        <tr key={rIdx} className="border-b border-slate-800 hover:bg-slate-850/50">
-                                          {userColumns.map((col) => (
-                                            <td key={col} className="p-2 border-r border-slate-800 last:border-r-0 text-slate-200">
-                                              {row[col] === null ? (
-                                                <span className="text-amber-400/80 italic font-semibold">NULL</span>
-                                              ) : (
-                                                String(row[col])
-                                              )}
-                                            </td>
-                                          ))}
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
-                            </div>
+                            <ResultTableViewer
+                              userColumns={userColumns}
+                              userRows={userRows}
+                              expectedColumns={expectedColumns}
+                              expectedRows={expectedRows}
+                              testResults={testResults}
+                              errorMessage={errorMessage}
+                              nextMilestone={nextMilestone}
+                              onAdvanceMilestone={handleAdvanceMilestone}
+                              resultTab={resultTab}
+                              onResultTabChange={setResultTab}
+                            />
                           }
                           secondPane={
                             <div className="h-full w-full border-t border-slate-800 overflow-hidden">
@@ -945,68 +1010,18 @@ export const SqlApp: React.FC = () => {
                           }
                         />
                       ) : (
-                        <div className="flex-1 p-3 overflow-auto h-full w-full min-h-0 bg-slate-925">
-                          {testResults.length > 0 && (
-                            testResults[0].passed ? (
-                              <div className="p-2.5 mb-2.5 rounded bg-emerald-950/60 border border-emerald-700/80 text-emerald-300 text-xs font-semibold flex items-center justify-between">
-                                <span className="flex items-center gap-1.5">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                                  All assertions passed! Milestone completed.
-                                </span>
-                                {nextMilestone && (
-                                  <button
-                                    onClick={handleAdvanceMilestone}
-                                    className="px-2.5 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-mono text-[11px] transition shadow-sm"
-                                  >
-                                    {nextMilestone.label}
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="p-2.5 mb-2.5 rounded bg-amber-950/60 border border-amber-700/80 text-amber-200 text-xs">
-                                <strong>Assertion Failed:</strong> {testResults[0].message}
-                              </div>
-                            )
-                          )}
-                          {errorMessage ? (
-                            <div className="p-4 rounded bg-red-950/40 border border-red-500/40 text-red-200 text-xs font-mono">
-                              <strong>SQL Syntax Error:</strong> {errorMessage}
-                            </div>
-                          ) : userRows.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-xs text-slate-500">
-                              Press "Run Query" or Ctrl+Enter to execute.
-                            </div>
-                          ) : (
-                            <div className="border border-slate-800 rounded overflow-hidden">
-                              <table className="w-full text-xs font-mono border-collapse text-left">
-                                <thead>
-                                  <tr className="bg-slate-800 text-slate-300 border-b border-slate-700">
-                                    {userColumns.map((col) => (
-                                      <th key={col} className="p-2 border-r border-slate-700 last:border-r-0">
-                                        {col}
-                                      </th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {userRows.map((row, rIdx) => (
-                                    <tr key={rIdx} className="border-b border-slate-800 hover:bg-slate-850/50">
-                                      {userColumns.map((col) => (
-                                        <td key={col} className="p-2 border-r border-slate-800 last:border-r-0 text-slate-200">
-                                          {row[col] === null ? (
-                                            <span className="text-amber-400/80 italic font-semibold">NULL</span>
-                                          ) : (
-                                            String(row[col])
-                                          )}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
+                        <ResultTableViewer
+                          userColumns={userColumns}
+                          userRows={userRows}
+                          expectedColumns={expectedColumns}
+                          expectedRows={expectedRows}
+                          testResults={testResults}
+                          errorMessage={errorMessage}
+                          nextMilestone={nextMilestone}
+                          onAdvanceMilestone={handleAdvanceMilestone}
+                          resultTab={resultTab}
+                          onResultTabChange={setResultTab}
+                        />
                       )
                     }
                   />
@@ -1059,6 +1074,7 @@ export const SqlApp: React.FC = () => {
                 id: c.id,
                 title: c.title,
                 category: c.difficulty,
+                tags: c.tags,
               }))}
               currentIndex={currentIdx}
               completedIds={completedMilestones}
@@ -1069,10 +1085,30 @@ export const SqlApp: React.FC = () => {
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
               activeFilter={activeCategoryFilter}
               onFilterChange={setActiveCategoryFilter}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
             />
           </div>
         </div>
       )}
+
+      {/* Visual ERD & Schema Map Modal */}
+      <ErdModal
+        isOpen={showErdModal}
+        onClose={() => setShowErdModal(false)}
+        db={db}
+        activeDbName={dbName}
+        onInsertSnippet={(snippet) => setUserQuery((prev) => (prev ? `${prev} ${snippet}` : snippet))}
+      />
+
+      {/* Query Execution History Modal */}
+      <QueryHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        history={queryHistory}
+        onRestoreQuery={(q) => setUserQuery(q)}
+        onClearHistory={() => setQueryHistory([])}
+      />
 
       {/* Tutorial Tour Overlay */}
       <TutorialTour isOpen={showTour} onClose={() => setShowTour(false)} />

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
+import { CheckCircle2, ChevronRight, BookOpen, Search, X, Hash } from "lucide-react";
 
 export const GithubIcon: React.FC<{ className?: string }> = ({ className = "w-3.5 h-3.5" }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -12,6 +12,7 @@ export interface LabMilestone {
   title: string;
   category?: string;
   difficulty?: string;
+  tags?: string[];
 }
 
 export interface LabSidebarProps {
@@ -25,6 +26,8 @@ export interface LabSidebarProps {
   githubUrl?: string;
   activeFilter?: string;
   onFilterChange?: (filter: string) => void;
+  activeTag?: string;
+  onTagChange?: (tag: string) => void;
 }
 
 // Colour tokens per difficulty category
@@ -48,9 +51,15 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   githubUrl,
   activeFilter: activeFilterProp,
   onFilterChange,
+  activeTag: activeTagProp,
+  onTagChange,
 }) => {
   const [internalFilter, setInternalFilter] = useState<string>("all");
+  const [internalTag, setInternalTag] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const activeFilter = activeFilterProp !== undefined ? activeFilterProp : internalFilter;
+  const activeTag = activeTagProp !== undefined ? activeTagProp : internalTag;
 
   const setActiveFilter = (filter: string) => {
     if (onFilterChange) {
@@ -60,11 +69,19 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
     }
   };
 
+  const setActiveTag = (tag: string) => {
+    if (onTagChange) {
+      onTagChange(tag);
+    } else {
+      setInternalTag(tag);
+    }
+  };
+
   const completedCount = completedIds.length;
   const totalCount = milestones.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  // Derive unique categories present in this milestone set (preserves insertion order)
+  // Derive unique categories present in this milestone set
   const categories = useMemo(() => {
     const seen = new Set<string>();
     milestones.forEach((m) => {
@@ -74,13 +91,42 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
     return Array.from(seen);
   }, [milestones]);
 
-  // Filtered view — keep original index for correct onSelect calls
+  // Derive top unique tags across milestones
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    milestones.forEach((m) => {
+      (m.tags || []).forEach((t) => {
+        const clean = t.toLowerCase();
+        counts.set(clean, (counts.get(clean) || 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag]) => tag);
+  }, [milestones]);
+
+  // Filtered view
   const filteredMilestones = useMemo(() => {
-    if (activeFilter === "all") return milestones.map((m, idx) => ({ m, idx }));
     return milestones
       .map((m, idx) => ({ m, idx }))
-      .filter(({ m }) => (m.category ?? m.difficulty ?? "").toLowerCase() === activeFilter);
-  }, [milestones, activeFilter]);
+      .filter(({ m }) => {
+        if (activeFilter !== "all") {
+          const cat = (m.category ?? m.difficulty ?? "").toLowerCase();
+          if (cat !== activeFilter.toLowerCase()) return false;
+        }
+        if (activeTag && activeTag !== "all") {
+          const tags = (m.tags || []).map((t) => t.toLowerCase());
+          if (!tags.includes(activeTag.toLowerCase())) return false;
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchTitle = m.title.toLowerCase().includes(q);
+          const matchTags = (m.tags || []).some((t) => t.toLowerCase().includes(q));
+          if (!matchTitle && !matchTags) return false;
+        }
+        return true;
+      });
+  }, [milestones, activeFilter, activeTag, searchQuery]);
 
   const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -113,14 +159,32 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
         </div>
       </div>
 
+      {/* ── Search Bar ── */}
+      <div className="px-2.5 pt-2.5 pb-1.5 border-b border-slate-800/80 shrink-0">
+        <div className="relative">
+          <Search className="w-3 h-3 text-slate-500 absolute left-2 top-2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search questions or tags..."
+            className="w-full pl-7 pr-6 py-1 text-[11px] rounded bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500 font-sans"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-1.5 top-1.5 p-0.5 text-slate-500 hover:text-slate-300"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── Difficulty Filter Pills ── */}
       {categories.length > 0 && (
-        <div className="px-2.5 py-2 border-b border-slate-800 shrink-0">
-          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-            Filter by difficulty
-          </div>
+        <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0">
           <div className="flex flex-wrap gap-1">
-            {/* All pill */}
             <button
               onClick={() => setActiveFilter("all")}
               className={`text-[10px] px-2 py-0.5 rounded border font-medium transition ${
@@ -144,6 +208,40 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                   }`}
                 >
                   {capitalise(cat)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Topic Tag Filter Pills ── */}
+      {allTags.length > 0 && (
+        <div className="px-2.5 py-1.5 border-b border-slate-800/80 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+            <button
+              onClick={() => setActiveTag("all")}
+              className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 font-mono transition ${
+                activeTag === "all"
+                  ? "bg-sky-950 text-sky-300 border border-sky-600 font-semibold"
+                  : "bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-750"
+              }`}
+            >
+              All Topics
+            </button>
+            {allTags.slice(0, 10).map((tag) => {
+              const isActive = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(isActive ? "all" : tag)}
+                  className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 font-mono transition flex items-center gap-0.5 ${
+                    isActive
+                      ? "bg-sky-900 text-sky-200 border border-sky-500 font-semibold shadow-xs"
+                      : "bg-slate-850 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-750"
+                  }`}
+                >
+                  <span>#{tag}</span>
                 </button>
               );
             })}
@@ -203,15 +301,29 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                 {/* Title & Metadata */}
                 <div className="flex-1 min-w-0">
                   <div className="truncate leading-tight">{displayTitle}</div>
-                  {cat && (
-                    <div
-                      className={`text-[10px] font-mono uppercase mt-0.5 truncate ${
-                        catStyle?.badge ?? "text-slate-500"
-                      } group-hover:opacity-90`}
-                    >
-                      {cat}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {cat && (
+                      <span
+                        className={`text-[10px] font-mono uppercase truncate ${
+                          catStyle?.badge ?? "text-slate-500"
+                        } group-hover:opacity-90`}
+                      >
+                        {cat}
+                      </span>
+                    )}
+                    {m.tags && m.tags.length > 0 && (
+                      <div className="flex items-center gap-1 overflow-hidden">
+                        {m.tags.slice(0, 2).map((t) => (
+                          <span
+                            key={t}
+                            className="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400 group-hover:text-slate-300 shrink-0"
+                          >
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Active chevron */}
