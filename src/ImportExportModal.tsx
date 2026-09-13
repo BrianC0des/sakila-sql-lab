@@ -91,6 +91,17 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isTableDropdownOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Generate dynamic AI prompt based on currently loaded schema & user preferences
