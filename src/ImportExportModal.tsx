@@ -74,6 +74,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   const [promptCount, setPromptCount] = useState<number>(10);
   const [promptTopic, setPromptTopic] = useState<"balanced" | "basics" | "aggregations" | "joins" | "advanced">("balanced");
+  const [promptClarity, setPromptClarity] = useState<"crystal-clear" | "balanced" | "exploratory">("crystal-clear");
   const [promptCustomTags, setPromptCustomTags] = useState<string>("joins, aggregates, filtering");
   const [selectedExportTable, setSelectedExportTable] = useState<string>("");
   const [isTableDropdownOpen, setIsTableDropdownOpen] = useState(false);
@@ -107,6 +108,21 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       advanced: `Focus on advanced SQL patterns: Subqueries (scalar & IN/EXISTS), CASE WHEN conditional columns, DATE functions, and complex analytical queries.`
     };
 
+    const clarityDescriptions: Record<string, string> = {
+      "crystal-clear": `Highest Clarity (Explicit Specifications):
+- Explicitly state exact table names, column names, and prescribed column aliases (e.g., "alias count as total_rentals", "alias average as avg_price").
+- Explicitly state exact filtering conditions, string matching rules, and ORDER BY direction.
+- Zero ambiguity: Ensure students know the exact shape and naming of the expected output table so automated test suites evaluate with 100% precision.`,
+      "balanced": `Balanced Scenario (Real-World Context with Clear Criteria):
+- Present a realistic business scenario with clear business questions.
+- Clearly describe the required metrics, target entities, and filtering rules.
+- State desired column names without being overly prescriptive on intermediate steps, while keeping reference solutions standard.`,
+      "exploratory": `Exploratory / Business Ticket Style (High Autonomy):
+- Write the prompt like a real-world stakeholder request or bug ticket.
+- Describe the business objective (e.g. "Identify repeat customers with above-average spend who haven't rented this month").
+- Encourage the student to investigate the database schema, identify the necessary tables and join relationships, and design their own query structure.`
+    };
+
     return `You are an expert SQL teacher and curriculum designer.
 Generate a batch of exactly ${promptCount} hands-on practice SQL questions for the following SQLite database.
 
@@ -116,6 +132,16 @@ ${tableListStr}
 ### TOPIC FOCUS:
 ${topicDescriptions[promptTopic]}
 ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : ""}
+
+### PROBLEM CLARITY & GUIDANCE STYLE:
+${clarityDescriptions[promptClarity]}
+
+### STRICT PROBLEM SPECIFICATION & CLARITY RULES:
+1. Every challenge "description" MUST have high clarity:
+   - State the task clearly in 2-3 sentences.
+   - Explicitly list the expected output columns and any required aliases.
+   - Specify exact filtering conditions and ORDER BY / LIMIT rules.
+2. The "referenceSolution" must strictly match the requirements in the description so query evaluation is 100% deterministic.
 
 ### OUTPUT FORMAT REQUIREMENTS:
 1. Return ONLY a single raw JSON object matching the schema below.
@@ -948,7 +974,7 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
           {/* TAB 4: AI Prompt Generator */}
           {activeTab === "prompt" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                     Batch Size (Questions)
@@ -956,7 +982,7 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                   <select
                     value={promptCount}
                     onChange={(e) => setPromptCount(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
                   >
                     <option value={5}>5 Questions (Quick Review)</option>
                     <option value={10}>10 Questions (Standard Quiz)</option>
@@ -972,13 +998,29 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                   <select
                     value={promptTopic}
                     onChange={(e) => setPromptTopic(e.target.value as any)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
                   >
                     <option value="balanced">Balanced Progression (Beginner → Adv)</option>
                     <option value="basics">Foundations (SELECT, WHERE, LIMIT)</option>
                     <option value="aggregations">Aggregations (GROUP BY, HAVING, COUNT)</option>
                     <option value="joins">Relational JOINs (INNER, LEFT, Multi-table)</option>
                     <option value="advanced">Advanced (Subqueries, CASE WHEN, DATE)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Problem Clarity & Guidance
+                  </label>
+                  <select
+                    data-test="prompt-clarity-select"
+                    value={promptClarity}
+                    onChange={(e) => setPromptClarity(e.target.value as any)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-hidden focus:border-sky-500 cursor-pointer"
+                  >
+                    <option value="crystal-clear">Crystal Clear (Explicit Specs & Aliases)</option>
+                    <option value="balanced">Balanced (Scenario + Clear Goals)</option>
+                    <option value="exploratory">Exploratory (Real-World Ticket)</option>
                   </select>
                 </div>
 
