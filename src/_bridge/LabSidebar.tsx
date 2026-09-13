@@ -23,6 +23,8 @@ export interface LabSidebarProps {
   onSelect: (index: number) => void;
   className?: string;
   githubUrl?: string;
+  activeFilter?: string;
+  onFilterChange?: (filter: string) => void;
 }
 
 // Colour tokens per difficulty category
@@ -44,8 +46,19 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   onSelect,
   className = "",
   githubUrl,
+  activeFilter: activeFilterProp,
+  onFilterChange,
 }) => {
-  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [internalFilter, setInternalFilter] = useState<string>("all");
+  const activeFilter = activeFilterProp !== undefined ? activeFilterProp : internalFilter;
+
+  const setActiveFilter = (filter: string) => {
+    if (onFilterChange) {
+      onFilterChange(filter);
+    } else {
+      setInternalFilter(filter);
+    }
+  };
 
   const completedCount = completedIds.length;
   const totalCount = milestones.length;

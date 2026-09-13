@@ -1250,6 +1250,7 @@ export const quizBatches: QuizBatch[] = [
   batch_like,
   batch_order_limit,
   batch_aggregates,
+  batch_keys,
   batch_group_by,
   batch_having,
   batch_case,
@@ -1258,6 +1259,5 @@ export const quizBatches: QuizBatch[] = [
   batch_join_group,
   batch_subqueries,
   batch_query_order,
-  batch_keys,
   batch_sakila_mixed,
 ];

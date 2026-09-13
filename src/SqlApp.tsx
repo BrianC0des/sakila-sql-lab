@@ -115,6 +115,7 @@ export const SqlApp: React.FC = () => {
   });
   const [showDbSwitcher, setShowDbSwitcher] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
   const [isMobile, setIsMobile] = useState(() => {
     try {
       return typeof window !== "undefined" && window.innerWidth < 768;
@@ -357,13 +358,94 @@ export const SqlApp: React.FC = () => {
 
   // Update query when challenge changes
   const handleSelectChallenge = (idx: number) => {
+    if (idx < 0 || idx >= allChallenges.length) return;
+    const challenge = allChallenges[idx];
+    if (
+      activeCategoryFilter !== "all" &&
+      challenge?.difficulty &&
+      challenge.difficulty.toLowerCase() !== activeCategoryFilter.toLowerCase()
+    ) {
+      setActiveCategoryFilter(challenge.difficulty.toLowerCase());
+    }
     setCurrentIdx(idx);
-    setUserQuery(allChallenges[idx]?.starterQuery || "");
+    setUserQuery(challenge?.starterQuery || "");
     setUserRows([]);
     setUserColumns([]);
     setErrorMessage(null);
     setTestResults([]);
     setShowHints(false);
+  };
+
+  const nextMilestone = useMemo(() => {
+    if (activeCategoryFilter !== "all") {
+      // 1. Look for next milestone with the same difficulty after currentIdx
+      for (let i = currentIdx + 1; i < allChallenges.length; i++) {
+        if ((allChallenges[i].difficulty || "").toLowerCase() === activeCategoryFilter.toLowerCase()) {
+          const catName = allChallenges[i].difficulty.charAt(0).toUpperCase() + allChallenges[i].difficulty.slice(1);
+          return {
+            targetIdx: i,
+            label: `Next ${catName} Milestone →`,
+            nextCategory: activeCategoryFilter,
+          };
+        }
+      }
+
+      // 2. Look for any earlier uncompleted milestone in this category
+      for (let i = 0; i < currentIdx; i++) {
+        if (
+          (allChallenges[i].difficulty || "").toLowerCase() === activeCategoryFilter.toLowerCase() &&
+          !completedMilestones.includes(allChallenges[i].id)
+        ) {
+          const catName = allChallenges[i].difficulty.charAt(0).toUpperCase() + allChallenges[i].difficulty.slice(1);
+          return {
+            targetIdx: i,
+            label: `Next Unfinished ${catName} Milestone →`,
+            nextCategory: activeCategoryFilter,
+          };
+        }
+      }
+
+      // 3. All milestones in this difficulty tier completed! Offer advancing to next tier
+      const progression = ["beginner", "intermediate", "advanced"];
+      const currentTierIdx = progression.indexOf(activeCategoryFilter.toLowerCase());
+      if (currentTierIdx !== -1 && currentTierIdx < progression.length - 1) {
+        const nextTier = progression[currentTierIdx + 1];
+        const nextTierFirstIdx = allChallenges.findIndex(
+          (c) => (c.difficulty || "").toLowerCase() === nextTier
+        );
+        if (nextTierFirstIdx !== -1) {
+          const currentName = activeCategoryFilter.charAt(0).toUpperCase() + activeCategoryFilter.slice(1);
+          const nextName = nextTier.charAt(0).toUpperCase() + nextTier.slice(1);
+          return {
+            targetIdx: nextTierFirstIdx,
+            label: `All ${currentName} Done! Advance to ${nextName} →`,
+            nextCategory: nextTier,
+          };
+        }
+      }
+
+      return null;
+    }
+
+    // activeCategoryFilter === "all"
+    if (currentIdx < allChallenges.length - 1) {
+      const nextChallenge = allChallenges[currentIdx + 1];
+      return {
+        targetIdx: currentIdx + 1,
+        label: `Next Milestone (${nextChallenge.title.split(":")[0]}) →`,
+        nextCategory: "all",
+      };
+    }
+
+    return null;
+  }, [allChallenges, currentIdx, activeCategoryFilter, completedMilestones]);
+
+  const handleAdvanceMilestone = () => {
+    if (!nextMilestone) return;
+    if (nextMilestone.nextCategory && nextMilestone.nextCategory !== activeCategoryFilter) {
+      setActiveCategoryFilter(nextMilestone.nextCategory);
+    }
+    handleSelectChallenge(nextMilestone.targetIdx);
   };
 
   const handleImportChallenges = (newChallenges: SqlChallenge[]) => {
@@ -505,6 +587,8 @@ export const SqlApp: React.FC = () => {
               completedIds={completedMilestones}
               onSelect={handleSelectChallenge}
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
+              activeFilter={activeCategoryFilter}
+              onFilterChange={setActiveCategoryFilter}
             />
           </div>
         }
@@ -794,12 +878,12 @@ export const SqlApp: React.FC = () => {
                                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                       All assertions passed! Milestone completed.
                                     </span>
-                                    {currentIdx < allChallenges.length - 1 && (
+                                    {nextMilestone && (
                                       <button
-                                        onClick={() => handleSelectChallenge(currentIdx + 1)}
+                                        onClick={handleAdvanceMilestone}
                                         className="px-2.5 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-mono text-[11px] transition shadow-sm"
                                       >
-                                        Next Milestone →
+                                        {nextMilestone.label}
                                       </button>
                                     )}
                                   </div>
@@ -869,12 +953,12 @@ export const SqlApp: React.FC = () => {
                                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                                   All assertions passed! Milestone completed.
                                 </span>
-                                {currentIdx < allChallenges.length - 1 && (
+                                {nextMilestone && (
                                   <button
-                                    onClick={() => handleSelectChallenge(currentIdx + 1)}
+                                    onClick={handleAdvanceMilestone}
                                     className="px-2.5 py-0.5 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-mono text-[11px] transition shadow-sm"
                                   >
-                                    Next Milestone →
+                                    {nextMilestone.label}
                                   </button>
                                 )}
                               </div>
@@ -983,6 +1067,8 @@ export const SqlApp: React.FC = () => {
                 setShowMobileSidebar(false);
               }}
               githubUrl="https://github.com/BrianC0des/sakila-sql-lab"
+              activeFilter={activeCategoryFilter}
+              onFilterChange={setActiveCategoryFilter}
             />
           </div>
         </div>
