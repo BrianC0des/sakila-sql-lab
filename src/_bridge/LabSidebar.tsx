@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { CheckCircle2, ChevronRight, BookOpen, Search, X, Hash, ChevronDown, Filter, Check } from "lucide-react";
+import { CheckCircle2, ChevronRight, BookOpen, Search, X, Hash, ChevronDown, Filter, Check, PlusCircle } from "lucide-react";
 
 export const GithubIcon: React.FC<{ className?: string }> = ({ className = "w-3.5 h-3.5" }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -33,6 +33,7 @@ export interface LabSidebarProps {
   activeTags?: string[];
   onTagChange?: (tag: string) => void;
   onTagsChange?: (tags: string[]) => void;
+  onAddBatch?: () => void;
 }
 
 // Colour tokens per difficulty category
@@ -61,6 +62,7 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   activeTags: activeTagsProp,
   onTagChange,
   onTagsChange,
+  onAddBatch,
 }) => {
   const [internalFilter, setInternalFilter] = useState<string>("all");
   const [internalFilterCustom, setInternalFilterCustom] = useState<boolean>(false);
@@ -723,26 +725,39 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
         )}
       </div>
 
-      {/* ── GitHub Source Code Footer ── */}
-      <div className="shrink-0 border-t border-slate-800 px-3 py-2.5">
-        <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-          Source Repository
+      {/* ── Footer: Add Question Batch or GitHub Source Code ── */}
+      {onAddBatch ? (
+        <div className="shrink-0 border-t border-slate-800 p-2.5 bg-slate-925/40">
+          <button
+            data-test="add-question-batch-btn"
+            onClick={onAddBatch}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-sky-950/50 hover:bg-sky-900/60 text-sky-300 hover:text-white border border-sky-800/60 hover:border-sky-500 text-xs font-semibold shadow-xs transition cursor-pointer group"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+            <span>Add Question Batch</span>
+          </button>
         </div>
-        <a
-          href={githubUrl || "https://github.com/BrianC0des/sakila-sql-lab"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-between px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 hover:border-sky-500/60 text-slate-300 hover:text-sky-300 transition text-[11px] group"
-        >
-          <div className="flex items-center gap-2">
-            <GithubIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-400 transition" />
-            <span className="font-mono text-[10px]">sakila-sql-lab</span>
+      ) : (
+        <div className="shrink-0 border-t border-slate-800 px-3 py-2.5">
+          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+            Source Repository
           </div>
-          <span className="text-[10px] text-slate-500 group-hover:text-slate-400 font-sans">
-            v1.0 ↗
-          </span>
-        </a>
-      </div>
+          <a
+            href={githubUrl || "https://github.com/BrianC0des/sakila-sql-lab"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 hover:border-sky-500/60 text-slate-300 hover:text-sky-300 transition text-[11px] group"
+          >
+            <div className="flex items-center gap-2">
+              <GithubIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-400 transition" />
+              <span className="font-mono text-[10px]">sakila-sql-lab</span>
+            </div>
+            <span className="text-[10px] text-slate-500 group-hover:text-slate-400 font-sans">
+              v1.0 ↗
+            </span>
+          </a>
+        </div>
+      )}
     </nav>
   );
 };
