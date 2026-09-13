@@ -194,6 +194,104 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
     }
   };
 
+  // ─── Database Export Handlers ──────────────────────────────────────────────
+  const handleExportSqliteDb = () => {
+    if (!db) {
+      setDbError("No database is currently loaded to export.");
+      return;
+    }
+    setDbError(null);
+    try {
+      const binary = db.export();
+      const blob = new Blob([binary], { type: "application/x-sqlite3" });
+      const cleanName = activeDbName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") || "database";
+      const fileName = `${cleanName}-${new Date().toISOString().slice(0, 10)}.sqlite`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDbSuccess(`Exported "${fileName}" (${Math.round(binary.length / 1024)} KB) successfully!`);
+      setTimeout(() => setDbSuccess(null), 5000);
+    } catch (err: any) {
+      setDbError("Failed to export SQLite database: " + (err.message || String(err)));
+    }
+  };
+
+  const handleExportSqlDump = () => {
+    if (!db) {
+      setDbError("No database is currently loaded to export.");
+      return;
+    }
+    setDbError(null);
+    try {
+      let sqlContent = `-- ========================================================\n`;
+      sqlContent += `-- SQL Studio Database Dump: ${activeDbName}\n`;
+      sqlContent += `-- Exported At: ${new Date().toISOString()}\n`;
+      sqlContent += `-- Total Schema Tables: ${schemaTables.length}\n`;
+      sqlContent += `-- ========================================================\n\n`;
+
+      const masterRes = db.exec(
+        "SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY CASE type WHEN 'table' THEN 1 WHEN 'view' THEN 2 WHEN 'index' THEN 3 ELSE 4 END, name ASC;"
+      );
+
+      if (masterRes.length > 0) {
+        const rows = masterRes[0].values;
+        for (const row of rows) {
+          const type = String(row[0]);
+          const name = String(row[1]);
+          const sql = String(row[2]);
+
+          sqlContent += `-- ─── ${type.toUpperCase()}: ${name} ───\n`;
+          sqlContent += `${sql};\n\n`;
+
+          if (type === "table") {
+            try {
+              const dataRes = db.exec(`SELECT * FROM "${name}" LIMIT 500;`);
+              if (dataRes.length > 0) {
+                const cols = dataRes[0].columns;
+                const values = dataRes[0].values;
+                if (values.length > 0) {
+                  sqlContent += `-- Data for ${name} (${values.length} rows)\n`;
+                  for (const valRow of values) {
+                    const formattedVals = valRow.map((v) => {
+                      if (v === null) return "NULL";
+                      if (typeof v === "number") return v;
+                      return `'${String(v).replace(/'/g, "''")}'`;
+                    });
+                    sqlContent += `INSERT INTO "${name}" (${cols.map((c) => `"${c}"`).join(", ")}) VALUES (${formattedVals.join(", ")});\n`;
+                  }
+                  sqlContent += "\n";
+                }
+              }
+            } catch {
+              // ignore table read errors if any
+            }
+          }
+        }
+      }
+
+      const cleanName = activeDbName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") || "database";
+      const fileName = `${cleanName}-dump-${new Date().toISOString().slice(0, 10)}.sql`;
+      const blob = new Blob([sqlContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDbSuccess(`Exported SQL script "${fileName}" successfully!`);
+      setTimeout(() => setDbSuccess(null), 5000);
+    } catch (err: any) {
+      setDbError("Failed to export SQL script: " + (err.message || String(err)));
+    }
+  };
+
   // ─── Batch Question JSON Parser & Verifier ─────────────────────────────────
   const processBatchJson = (rawJson: string) => {
     setImportStatus({ success: null });
@@ -461,6 +559,40 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                   </div>
                 )}
               </div>
+
+              {/* Export Active Database */}
+              <div className="p-4 rounded-lg border border-slate-800 bg-slate-950 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    Export Active Database
+                  </h4>
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    {schemaTables.length} Tables Ready
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Download the current in-memory database to keep a local backup, open in DB Browser for SQLite / DBeaver, or share with classmates.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    onClick={handleExportSqliteDb}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition shadow-xs cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Download SQLite (.sqlite)
+                  </button>
+
+                  <button
+                    onClick={handleExportSqlDump}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition cursor-pointer"
+                  >
+                    <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                    Download SQL Script (.sql)
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -723,6 +855,22 @@ ${promptCustomTags.trim() ? `Target specific topic tags: ${promptCustomTags}` : 
                   >
                     <Download className="w-3.5 h-3.5 text-sky-400" />
                     Download Backup JSON
+                  </button>
+
+                  <button
+                    onClick={handleExportSqliteDb}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition ml-2"
+                  >
+                    <Database className="w-3.5 h-3.5 text-emerald-300" />
+                    Export SQLite DB (.sqlite)
+                  </button>
+
+                  <button
+                    onClick={handleExportSqlDump}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold border border-slate-700 transition ml-2"
+                  >
+                    <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                    Export SQL Script (.sql)
                   </button>
                 </div>
               </div>
