@@ -69,11 +69,23 @@ export const SqlApp: React.FC = () => {
       const saved = localStorage.getItem("sakila_custom_challenges");
       if (saved) {
         const parsed: SqlChallenge[] = JSON.parse(saved);
-        return parsed.map((c) => ({
-          ...c,
-          isCustom: true,
-          tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
-        }));
+        const seenIds = new Set<string>();
+        return parsed.map((c, i) => {
+          let id = c.id;
+          if (!id || seenIds.has(id)) {
+            id = `custom-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`;
+          }
+          seenIds.add(id);
+          const rawDiff = String(c.difficulty || "").toLowerCase().trim();
+          const difficulty = rawDiff === "beginner" || rawDiff === "advanced" ? rawDiff : "intermediate";
+          return {
+            ...c,
+            id,
+            difficulty,
+            isCustom: true,
+            tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+          };
+        });
       }
       return [];
     } catch {
@@ -87,23 +99,47 @@ export const SqlApp: React.FC = () => {
       const saved = localStorage.getItem(`sql_custom_${dbKey}`);
       if (saved) {
         const parsed: SqlChallenge[] = JSON.parse(saved);
+        const seenIds = new Set<string>();
         setCustomChallenges(
-          parsed.map((c) => ({
-            ...c,
-            isCustom: true,
-            tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
-          }))
+          parsed.map((c, i) => {
+            let id = c.id;
+            if (!id || seenIds.has(id)) {
+              id = `custom-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`;
+            }
+            seenIds.add(id);
+            const rawDiff = String(c.difficulty || "").toLowerCase().trim();
+            const difficulty = rawDiff === "beginner" || rawDiff === "advanced" ? rawDiff : "intermediate";
+            return {
+              ...c,
+              id,
+              difficulty,
+              isCustom: true,
+              tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+            };
+          })
         );
       } else if (isDefaultSakila) {
         const legacy = localStorage.getItem("sakila_custom_challenges");
         if (legacy) {
           const parsed: SqlChallenge[] = JSON.parse(legacy);
+          const seenIds = new Set<string>();
           setCustomChallenges(
-            parsed.map((c) => ({
-              ...c,
-              isCustom: true,
-              tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
-            }))
+            parsed.map((c, i) => {
+              let id = c.id;
+              if (!id || seenIds.has(id)) {
+                id = `custom-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`;
+              }
+              seenIds.add(id);
+              const rawDiff = String(c.difficulty || "").toLowerCase().trim();
+              const difficulty = rawDiff === "beginner" || rawDiff === "advanced" ? rawDiff : "intermediate";
+              return {
+                ...c,
+                id,
+                difficulty,
+                isCustom: true,
+                tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+              };
+            })
           );
         } else {
           setCustomChallenges([]);
@@ -134,6 +170,8 @@ export const SqlApp: React.FC = () => {
   const sidebarMilestones: LabMilestone[] = useMemo(() => {
     return allChallenges.map((c) => {
       const isCustom = Boolean(c.isCustom || customChallengeIds.has(c.id));
+      const rawDiff = String(c.difficulty || "").toLowerCase().trim();
+      const difficulty = rawDiff === "beginner" || rawDiff === "advanced" ? rawDiff : "intermediate";
       const tags = c.tags ? [...c.tags] : [];
       if (isCustom && !tags.some((t) => t.toLowerCase() === "custom")) {
         tags.push("custom");
@@ -141,8 +179,8 @@ export const SqlApp: React.FC = () => {
       return {
         id: c.id,
         title: c.title,
-        category: c.difficulty,
-        difficulty: c.difficulty,
+        category: difficulty,
+        difficulty,
         tags,
         isCustom,
       };
@@ -555,13 +593,25 @@ export const SqlApp: React.FC = () => {
   const handleImportChallenges = (newChallenges: SqlChallenge[]) => {
     setCustomChallenges((prev) => {
       const existingIds = new Set(prev.map((c) => c.id));
-      const taggedNew = newChallenges.map((c) => ({
-        ...c,
-        isCustom: true,
-        tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
-      }));
-      const filtered = taggedNew.filter((c) => !existingIds.has(c.id));
-      return [...prev, ...filtered];
+      const taggedNew = newChallenges.map((c, i) => {
+        let id = c.id;
+        if (!id || existingIds.has(id)) {
+          id = `custom-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`;
+        }
+        existingIds.add(id);
+
+        const rawDiff = String(c.difficulty || "").toLowerCase().trim();
+        const difficulty = rawDiff === "beginner" || rawDiff === "advanced" ? rawDiff : "intermediate";
+
+        return {
+          ...c,
+          id,
+          difficulty,
+          isCustom: true,
+          tags: Array.from(new Set([...(c.tags || []), "custom"].map((t) => String(t).toLowerCase().trim()))),
+        };
+      });
+      return [...prev, ...taggedNew];
     });
   };
 
@@ -886,7 +936,7 @@ export const SqlApp: React.FC = () => {
                         {activeChallenge.title.split(":")[0]}
                       </span>
                       <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                        {activeChallenge.difficulty}
+                        {activeChallenge.difficulty && activeChallenge.difficulty !== "custom" ? activeChallenge.difficulty : "intermediate"}
                       </span>
                       {(activeChallenge.isCustom || customChallengeIds.has(activeChallenge.id)) && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700 shadow-xs">

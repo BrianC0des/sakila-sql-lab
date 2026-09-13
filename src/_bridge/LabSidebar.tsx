@@ -38,7 +38,6 @@ const CATEGORY_STYLES: Record<string, { pill: string; badge: string }> = {
   beginner:     { pill: "bg-emerald-900/60 text-emerald-300 border-emerald-700 hover:bg-emerald-800/60", badge: "text-emerald-400" },
   intermediate: { pill: "bg-amber-900/50 text-amber-300 border-amber-700 hover:bg-amber-800/50",         badge: "text-amber-400"   },
   advanced:     { pill: "bg-rose-900/50 text-rose-300 border-rose-700 hover:bg-rose-800/50",             badge: "text-rose-400"    },
-  custom:       { pill: "bg-purple-900/50 text-purple-300 border-purple-700 hover:bg-purple-800/50",     badge: "text-purple-400"  },
 };
 const ACTIVE_PILL = "ring-2 ring-offset-1 ring-offset-slate-900 brightness-125";
 const DEFAULT_PILL = "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200";
@@ -316,9 +315,6 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                     className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
                   >
                     <option value="all">All ({milestones.length})</option>
-                    {customMilestonesCount > 0 && (
-                      <option value="custom">★ Custom Questions ({customMilestonesCount})</option>
-                    )}
                     {categories
                       .filter((cat) => cat !== "custom")
                       .map((cat) => {

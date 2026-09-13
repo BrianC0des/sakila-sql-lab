@@ -462,16 +462,24 @@ ${clarityDescriptions[promptClarity]}
         details.push({ title, passed, error: errMsg, rowCount });
 
         if (passed) {
+          const rawDiff = String(item.difficulty || "").toLowerCase().trim();
+          const validDifficulties = ["beginner", "intermediate", "advanced"];
+          const difficulty = validDifficulties.includes(rawDiff) ? rawDiff : "intermediate";
+
+          const safeId = item.id && !item.id.startsWith("batch-") && !item.id.startsWith("challenge-")
+            ? item.id
+            : `custom-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 7)}`;
+
           verifiedChallenges.push({
-            id: item.id || `custom-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+            id: safeId,
             title,
             description: item.description || "",
-            difficulty: item.difficulty || "intermediate",
+            difficulty,
             tags: Array.from(
               new Set([
                 ...(Array.isArray(item.tags) && item.tags.length > 0
                   ? item.tags.map((t: any) => String(t).toLowerCase().trim())
-                  : [(item.difficulty || "intermediate").toLowerCase()]),
+                  : [difficulty]),
                 "custom",
               ])
             ),
