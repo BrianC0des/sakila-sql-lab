@@ -881,35 +881,13 @@ export const SqlApp: React.FC = () => {
                   </button>
                 )}
 
-                {/* 1-Click Visual ERD Map */}
-                <button
-                  onClick={() => setShowErdModal(true)}
-                  title="Open Visual ERD & Schema Relationship Explorer"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition font-medium cursor-pointer"
-                >
-                  <GitFork className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="hidden sm:inline">ERD Map</span>
-                </button>
-
-                {/* 1-Click Question Packs & Lab Manager */}
-                <button
-                  data-tour="db-modal-btn"
-                  onClick={() => setShowManagerModal(true)}
-                  title="Import Local DB, Batch Import Questions, or Manage Questions"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition font-medium cursor-pointer"
-                >
-                  <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="hidden md:inline">Packs</span>
-                </button>
-
-                <div className="w-[1px] h-4 bg-slate-800 mx-0.5 shrink-0" />
-
-                {/* Settings & Utilities Popover */}
+                {/* Settings & Tools Popover */}
                 <div className="relative shrink-0" ref={settingsMenuRef}>
                   <button
+                    data-tour="settings-btn"
                     data-test="settings-menu-btn"
                     onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
-                    title="Preferences, Tour, and Resources"
+                    title="Tools, ERD Map, Question Packs, and Tour"
                     className={`p-1.5 rounded transition border cursor-pointer ${
                       isSettingsMenuOpen
                         ? "bg-slate-700 text-white border-slate-500"
@@ -919,37 +897,53 @@ export const SqlApp: React.FC = () => {
                     <Settings className="w-3.5 h-3.5" />
                   </button>
                   {isSettingsMenuOpen && (
-                    <div className="absolute right-0 mt-1.5 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 z-50 text-xs text-slate-300 divide-y divide-slate-800/80 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 mt-1.5 w-60 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl py-1 z-50 text-xs text-slate-300 divide-y divide-slate-800/80 animate-in fade-in zoom-in-95 duration-150">
                       <div className="py-1">
                         <button
                           onClick={() => {
                             setIsSettingsMenuOpen(false);
-                            setShowTour(true);
+                            setShowErdModal(true);
                           }}
-                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-800 hover:text-white transition cursor-pointer group"
                         >
-                          <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Interactive Tour</span>
+                          <GitFork className="w-4 h-4 text-sky-400 shrink-0 group-hover:scale-110 transition-transform" />
+                          <div className="leading-tight">
+                            <div className="font-medium text-slate-200 group-hover:text-white">ERD Relationship Map</div>
+                            <div className="text-[10px] text-slate-500">Visual table relations & schemas</div>
+                          </div>
                         </button>
                         <button
                           onClick={() => {
                             setIsSettingsMenuOpen(false);
                             setShowManagerModal(true);
                           }}
-                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-slate-800 hover:text-white transition cursor-pointer group"
                         >
-                          <Layers className="w-3.5 h-3.5 text-purple-400" />
-                          <span>Lab Manager & DB</span>
+                          <Layers className="w-4 h-4 text-purple-400 shrink-0 group-hover:scale-110 transition-transform" />
+                          <div className="leading-tight">
+                            <div className="font-medium text-slate-200 group-hover:text-white">Curriculum & Question Packs</div>
+                            <div className="text-[10px] text-slate-500">Batch import, AI prompts & custom DB</div>
+                          </div>
                         </button>
                       </div>
                       <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setIsSettingsMenuOpen(false);
+                            setShowTour(true);
+                          }}
+                          className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                        >
+                          <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>Interactive Tour</span>
+                        </button>
                         <a
                           href="https://github.com/BrianC0des/sakila-sql-lab"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                          className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                         >
-                          <GithubIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <GithubIcon className="w-4 h-4 text-slate-400 shrink-0" />
                           <span>GitHub Repository</span>
                         </a>
                       </div>

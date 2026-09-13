@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from "react";
-import { Sparkles, ChevronRight, ChevronLeft, X, Check, BookOpen, Code2, Database, Play } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, X, Check, BookOpen, Code2, Database, Play, Settings } from "lucide-react";
 
 export interface TourStep {
   targetSelector?: string;
@@ -58,11 +58,11 @@ const TOUR_STEPS: TourStep[] = [
     placement: "bottom"
   },
   {
-    targetSelector: "[data-tour='db-modal-btn']",
-    title: "6. Custom Packs & AI Prompt Generator",
+    targetSelector: "[data-tour='settings-btn']",
+    title: "6. Tools, ERD Map & Question Packs",
     description:
-      "Import your own SQLite databases or generate AI prompts for ChatGPT/Claude (with selectable batch sizes from 5 to 20 questions and custom topics) to create and batch import tailored question packs.",
-    icon: <Database className="w-5 h-5 text-purple-400" />,
+      "Access the visual ERD Relationship Map, batch import custom question packs, generate AI prompts for ChatGPT/Claude, or revisit this interactive tour anytime.",
+    icon: <Settings className="w-5 h-5 text-sky-400" />,
     placement: "bottom"
   }
 ];
