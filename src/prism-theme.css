@@ -1,0 +1,94 @@
+/* SQL Editor Prism Dark Theme - Pixel Perfect Alignment */
+
+.sql-code-layer {
+  box-sizing: border-box !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+  letter-spacing: 0px !important;
+  tab-size: 2 !important;
+  -moz-tab-size: 2 !important;
+  padding: 12px !important;
+  border: none !important;
+  margin: 0 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* Background highlighted pre element */
+pre.sql-code-layer {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  color: #f1f5f9 !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+/* Foreground interactive textarea */
+textarea.sql-code-layer {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: auto !important;
+  background: transparent !important;
+  color: transparent !important;
+  caret-color: #38bdf8 !important;
+  resize: none !important;
+  outline: none !important;
+  z-index: 2 !important;
+}
+
+textarea.sql-code-layer::placeholder {
+  color: #64748b !important;
+}
+
+textarea.sql-code-layer::selection {
+  background-color: rgba(56, 189, 248, 0.25) !important;
+  color: transparent !important;
+}
+
+/* Token Styles */
+.token.comment {
+  color: #64748b !important;
+  font-style: italic !important;
+}
+
+.token.keyword {
+  color: #38bdf8 !important;
+  font-weight: 600 !important;
+}
+
+.token.function {
+  color: #c084fc !important;
+  font-weight: 600 !important;
+}
+
+.token.string {
+  color: #4ade80 !important;
+}
+
+.token.number {
+  color: #fb923c !important;
+}
+
+.token.operator {
+  color: #f43f5e !important;
+}
+
+.token.punctuation {
+  color: #94a3b8 !important;
+}
+
+.token.boolean {
+  color: #f59e0b !important;
+  font-weight: 600 !important;
+}
