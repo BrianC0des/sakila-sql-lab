@@ -75,18 +75,24 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
   const [tagMatchMode, setTagMatchMode] = useState<"any" | "all">("any");
   const topicDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close topic dropdown on outside click
+  const [isDifficultyMenuOpen, setIsDifficultyMenuOpen] = useState(false);
+  const difficultyDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
       if (topicDropdownRef.current && !topicDropdownRef.current.contains(e.target as Node)) {
         setIsTopicMenuOpen(false);
       }
+      if (difficultyDropdownRef.current && !difficultyDropdownRef.current.contains(e.target as Node)) {
+        setIsDifficultyMenuOpen(false);
+      }
     };
-    if (isTopicMenuOpen) {
+    if (isTopicMenuOpen || isDifficultyMenuOpen) {
       document.addEventListener("mousedown", handleOutside);
     }
     return () => document.removeEventListener("mousedown", handleOutside);
-  }, [isTopicMenuOpen]);
+  }, [isTopicMenuOpen, isDifficultyMenuOpen]);
 
   const activeFilter = activeFilterProp !== undefined ? activeFilterProp : internalFilter;
   const filterCustom = filterCustomProp !== undefined ? filterCustomProp : internalFilterCustom;
@@ -305,95 +311,429 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            {/* Difficulty Dropdown */}
+            {/* Difficulty Filter Dropdown & Popover Modal */}
             {categories.length > 0 && (
-              <div>
-                <label
-                  htmlFor="difficulty-filter-select"
-                  className="block text-[9px] text-slate-400 mb-0.5 font-medium"
+              <div className="relative" ref={difficultyDropdownRef}>
+                {/* Semantic Accessible Select for testing and screen readers */}
+                <select
+                  id="difficulty-filter-select"
+                  data-test="difficulty-select"
+                  value={filterCustom ? "custom" : activeFilter}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "custom") {
+                      setFilterCustom(true);
+                      setActiveFilter("custom");
+                    } else {
+                      setFilterCustom(false);
+                      setActiveFilter(val);
+                    }
+                  }}
+                  className="sr-only"
+                  aria-hidden="true"
+                  tabIndex={-1}
                 >
-                  Difficulty
-                </label>
-                <div className="relative">
-                  <select
-                    id="difficulty-filter-select"
-                    data-test="difficulty-select"
-                    value={filterCustom ? "custom" : activeFilter}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "custom") {
-                        setFilterCustom(true);
-                        setActiveFilter("custom");
-                      } else {
-                        setFilterCustom(false);
-                        setActiveFilter(val);
-                      }
+                  <option value="all">
+                    All ({milestones.length})
+                  </option>
+                  <option value="custom">
+                    ★ Custom ({customMilestonesCount})
+                  </option>
+                  {categories
+                    .filter((cat) => cat !== "custom")
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {capitalise(cat)}
+                      </option>
+                    ))}
+                </select>
+
+                <div className="flex items-center justify-between mb-0.5">
+                  <label
+                    onClick={() => {
+                      setIsDifficultyMenuOpen((prev) => !prev);
+                      setIsTopicMenuOpen(false);
                     }}
-                    className={`w-full text-[11px] border rounded px-2 py-1 pr-5 font-sans cursor-pointer transition appearance-none truncate ${
-                      activeFilter !== "all" || filterCustom
-                        ? "border-sky-500/80 bg-sky-950/30 text-sky-200 font-medium"
-                        : "bg-slate-950 border-slate-800 text-slate-200 hover:border-slate-700"
-                    }`}
+                    className="block text-[9px] text-slate-400 font-medium cursor-pointer"
                   >
-                    <option value="all">
-                      All ({milestones.length})
-                    </option>
-                    <option value="custom">
-                      ★ Custom ({customMilestonesCount})
-                    </option>
-                    {categories
-                      .filter((cat) => cat !== "custom")
-                      .map((cat) => {
-                        const count = milestones.filter((m) => {
-                          const catMatch = (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase();
-                          return catMatch;
-                        }).length;
-                        return (
-                          <option key={cat} value={cat}>
-                            {capitalise(cat)} ({count})
-                          </option>
-                        );
-                      })}
-                  </select>
-                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                    Difficulty
+                  </label>
+                  {(filterCustom || activeFilter !== "all") && (
+                    <span className="text-[9px] text-sky-400 font-mono font-semibold">
+                      1 active
+                    </span>
+                  )}
                 </div>
+
+                {/* Difficulty Trigger Button */}
+                <button
+                  type="button"
+                  data-test="difficulty-multiselect-trigger"
+                  onClick={() => {
+                    setIsDifficultyMenuOpen((prev) => !prev);
+                    setIsTopicMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between text-[11px] bg-slate-950 border rounded px-2 py-1 text-slate-200 font-sans cursor-pointer transition truncate ${
+                    isDifficultyMenuOpen || activeFilter !== "all" || filterCustom
+                      ? "border-sky-500/80 bg-slate-950 text-sky-200"
+                      : "border-slate-800 hover:border-slate-700"
+                  }`}
+                  title="Filter by Difficulty"
+                >
+                  <span className="truncate">
+                    {filterCustom
+                      ? `★ Custom (${customMilestonesCount})`
+                      : activeFilter === "all"
+                      ? `All (${milestones.length})`
+                      : `${capitalise(activeFilter)}`}
+                  </span>
+                  <div className="flex items-center gap-1 shrink-0 ml-1">
+                    <ChevronDown
+                      className={`w-3 h-3 text-slate-400 transition-transform ${
+                        isDifficultyMenuOpen ? "rotate-180 text-sky-400" : ""
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                {/* Floating Difficulty Popover Modal (Matching Topic Tags popover 1:1) */}
+                {isDifficultyMenuOpen && (
+                  <div className="absolute left-0 top-full mt-1 w-[calc(200%+0.375rem)] min-w-[200px] max-w-[calc(100vw-1.5rem)] flex flex-col bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-100">
+                    {/* Header */}
+                    <div className="flex items-center justify-between text-[10px] pb-1.5 border-b border-slate-800 mb-1.5 text-slate-400">
+                      <span className="font-bold text-slate-300 text-[10px] uppercase tracking-wider">
+                        Difficulty Tier
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {(filterCustom || activeFilter !== "all") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFilterCustom(false);
+                              setActiveFilter("all");
+                            }}
+                            className="text-[10px] text-rose-400 hover:text-rose-300 transition cursor-pointer"
+                          >
+                            Reset
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsDifficultyMenuOpen(false)}
+                          className="text-[10px] text-sky-400 hover:text-sky-300 transition font-semibold cursor-pointer"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Options List */}
+                    <div className="space-y-1 pr-0.5">
+                      {/* Option: All */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterCustom(false);
+                          setActiveFilter("all");
+                          setIsDifficultyMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-sans transition text-left cursor-pointer ${
+                          activeFilter === "all" && !filterCustom
+                            ? "bg-sky-950/80 text-sky-200 border border-sky-700/60 font-semibold"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span
+                            className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                              activeFilter === "all" && !filterCustom
+                                ? "bg-sky-500 border-sky-400 text-slate-950"
+                                : "border-slate-700 bg-slate-950"
+                            }`}
+                          >
+                            {activeFilter === "all" && !filterCustom && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </span>
+                          <span>All Difficulties</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 shrink-0 font-mono">
+                          {milestones.length}
+                        </span>
+                      </button>
+
+                      {/* Option: ★ Custom (Directly beside / under All) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterCustom(true);
+                          setActiveFilter("custom");
+                          setIsDifficultyMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-sans transition text-left cursor-pointer ${
+                          filterCustom || activeFilter === "custom"
+                            ? "bg-amber-950/40 text-amber-200 border border-amber-600/60 font-semibold"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span
+                            className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                              filterCustom || activeFilter === "custom"
+                                ? "bg-amber-500 border-amber-400 text-slate-950"
+                                : "border-slate-700 bg-slate-950"
+                            }`}
+                          >
+                            {(filterCustom || activeFilter === "custom") && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </span>
+                          <span className="text-amber-300 font-medium flex items-center gap-1">
+                            ★ Custom Questions
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-amber-400/80 shrink-0 font-mono">
+                          {customMilestonesCount}
+                        </span>
+                      </button>
+
+                      {/* Difficulty Categories */}
+                      {categories
+                        .filter((cat) => cat !== "custom")
+                        .map((cat) => {
+                          const isSelected = !filterCustom && activeFilter.toLowerCase() === cat.toLowerCase();
+                          const count = milestones.filter(
+                            (m) => (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase()
+                          ).length;
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => {
+                                setFilterCustom(false);
+                                setActiveFilter(cat);
+                                setIsDifficultyMenuOpen(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-sans transition text-left cursor-pointer ${
+                                isSelected
+                                  ? "bg-sky-950/80 text-sky-200 border border-sky-700/60 font-semibold"
+                                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span
+                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                                    isSelected
+                                      ? "bg-sky-500 border-sky-400 text-slate-950"
+                                      : "border-slate-700 bg-slate-950"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </span>
+                                <span>{capitalise(cat)}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 shrink-0 font-mono">
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Topic Tag Dropdown */}
+            {/* Topic Tag Filter Dropdown & Popover Modal */}
             {tagCounts.length > 0 && (
-              <div>
-                <label
-                  htmlFor="topic-filter-select"
-                  className="block text-[9px] text-slate-400 mb-0.5 font-medium"
+              <div className="relative" ref={topicDropdownRef}>
+                {/* Semantic Accessible Select for testing and screen readers */}
+                <select
+                  id="topic-filter-select"
+                  data-test="topic-select"
+                  value={selectedTags.length > 0 ? selectedTags[0] : "all"}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "all") clearAllTags();
+                    else updateSelectedTags([val]);
+                  }}
+                  className="sr-only"
+                  aria-hidden="true"
+                  tabIndex={-1}
                 >
-                  Topic Tags
-                </label>
-                <div className="relative">
-                  <select
-                    id="topic-filter-select"
-                    data-test="topic-select"
-                    value={selectedTags.length > 0 ? selectedTags[0] : "all"}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "all") clearAllTags();
-                      else updateSelectedTags([val]);
+                  <option value="all">All Topics</option>
+                  {tagCounts.map(({ tag, count }) => (
+                    <option key={tag} value={tag}>
+                      #{tag} ({count})
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex items-center justify-between mb-0.5">
+                  <label
+                    onClick={() => {
+                      setIsTopicMenuOpen((prev) => !prev);
+                      setIsDifficultyMenuOpen(false);
                     }}
-                    className={`w-full text-[11px] border rounded px-2 py-1 pr-5 font-sans cursor-pointer transition appearance-none truncate ${
-                      selectedTags.length > 0
-                        ? "border-sky-500/80 bg-sky-950/30 text-sky-200 font-medium"
-                        : "bg-slate-950 border-slate-800 text-slate-200 hover:border-slate-700"
-                    }`}
+                    className="block text-[9px] text-slate-400 font-medium cursor-pointer"
                   >
-                    <option value="all">All ({tagCounts.length})</option>
-                    {tagCounts.map(({ tag, count }) => (
-                      <option key={tag} value={tag}>
-                        #{tag} ({count})
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                    Topic Tags
+                  </label>
+                  {selectedTags.length > 0 && (
+                    <span className="text-[9px] text-sky-400 font-mono font-semibold">
+                      {selectedTags.length} active
+                    </span>
+                  )}
                 </div>
+
+                {/* Multi-Select Trigger Button */}
+                <button
+                  type="button"
+                  data-test="topic-multiselect-trigger"
+                  onClick={() => {
+                    setIsTopicMenuOpen((prev) => !prev);
+                    setIsDifficultyMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between text-[11px] bg-slate-950 border rounded px-2 py-1 text-slate-200 font-sans cursor-pointer transition truncate ${
+                    isTopicMenuOpen || selectedTags.length > 0
+                      ? "border-sky-500/80 bg-slate-950 text-sky-200"
+                      : "border-slate-800 hover:border-slate-700"
+                  }`}
+                  title={
+                    selectedTags.length === 0
+                      ? "All Topics (Click to select multiple tags)"
+                      : selectedTags.map((t) => `#${t}`).join(", ")
+                  }
+                >
+                  <span className="truncate">
+                    {selectedTags.length === 0
+                      ? "All Topics"
+                      : selectedTags.length === 1
+                      ? `#${selectedTags[0]}`
+                      : `${selectedTags.length} tags selected`}
+                  </span>
+                  <div className="flex items-center gap-1 shrink-0 ml-1">
+                    <ChevronDown
+                      className={`w-3 h-3 text-slate-400 transition-transform ${
+                        isTopicMenuOpen ? "rotate-180 text-sky-400" : ""
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                {/* Floating Multi-Select Popover Modal */}
+                {isTopicMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-[calc(200%+0.375rem)] min-w-[200px] max-w-[calc(100vw-1.5rem)] max-h-60 flex flex-col bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-100">
+                    {/* Search inside tags */}
+                    <div className="relative mb-2">
+                      <Search className="w-3 h-3 text-slate-500 absolute left-2 top-2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={topicSearch}
+                        onChange={(e) => setTopicSearch(e.target.value)}
+                        placeholder={`Search ${tagCounts.length} tags...`}
+                        className="w-full pl-7 pr-6 py-1 text-[11px] bg-slate-950 border border-slate-800 rounded text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-sky-500 font-sans"
+                        autoFocus
+                      />
+                      {topicSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setTopicSearch("")}
+                          className="absolute right-1.5 top-1.5 p-0.5 text-slate-500 hover:text-slate-300 cursor-pointer"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mode & Action Header */}
+                    <div className="flex items-center justify-between text-[10px] pb-1.5 border-b border-slate-800 mb-1.5 text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-500">Match:</span>
+                        <button
+                          type="button"
+                          onClick={() => setTagMatchMode("any")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition cursor-pointer ${
+                            tagMatchMode === "any"
+                              ? "bg-sky-950 text-sky-300 border border-sky-700"
+                              : "text-slate-500 hover:text-slate-300 border border-transparent"
+                          }`}
+                          title="Show questions matching ANY selected tag (OR)"
+                        >
+                          ANY
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTagMatchMode("all")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition cursor-pointer ${
+                            tagMatchMode === "all"
+                              ? "bg-sky-950 text-sky-300 border border-sky-700"
+                              : "text-slate-500 hover:text-slate-300 border border-transparent"
+                          }`}
+                          title="Show questions matching ALL selected tags (AND)"
+                        >
+                          ALL
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {selectedTags.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={clearAllTags}
+                            className="text-[10px] text-rose-400 hover:text-rose-300 transition cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsTopicMenuOpen(false)}
+                          className="text-[10px] text-sky-400 hover:text-sky-300 transition font-semibold cursor-pointer"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Scrollable Tag Checkbox List */}
+                    <div className="overflow-y-auto space-y-0.5 flex-1 max-h-48 pr-0.5 custom-scrollbar">
+                      {filteredTagCounts.length === 0 ? (
+                        <div className="text-center py-3 text-[11px] text-slate-500 italic">
+                          No matching tags
+                        </div>
+                      ) : (
+                        filteredTagCounts.map(({ tag, count }) => {
+                          const isSelected = selectedTags.includes(tag.toLowerCase());
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => toggleTag(tag)}
+                              className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-mono transition text-left cursor-pointer ${
+                                isSelected
+                                  ? "bg-sky-950/80 text-sky-200 border border-sky-700/60 font-semibold"
+                                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span
+                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                                    isSelected
+                                      ? "bg-sky-500 border-sky-400 text-slate-950"
+                                      : "border-slate-700 bg-slate-950"
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </span>
+                                <span className="truncate">#{tag}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 shrink-0 font-sans ml-2">
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -72,7 +72,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   }, [schemaTables, selectedTablePill, searchFilter]);
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-200 text-xs font-mono select-none">
+    <div className="flex flex-col h-full w-full min-h-0 bg-slate-900 text-slate-200 text-xs font-mono select-none overflow-hidden">
       {/* ── Top Header & Tab Navigation Bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 bg-slate-950 border-b border-slate-800 shrink-0">
         {/* Left: Tab Switchers */}
@@ -208,7 +208,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       </div>
 
       {/* ── Content Body (Visible Scrollbars) ── */}
-      <div className="flex-1 overflow-y-scroll custom-scrollbar p-3 min-h-0 bg-slate-900/60 [scrollbar-gutter:stable]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-3 min-h-0 bg-slate-900/60 [scrollbar-gutter:stable]">
         {/* TAB 1: SCHEMA TABLES & FIELDS (FULL WIDTH) */}
         {activeTab === "schema" && (
           <div>
@@ -364,7 +364,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                       </div>
 
                       {/* Columns List with Visible High-Contrast Scrollbar */}
-                      <div className="p-2 space-y-1 overflow-y-auto custom-scrollbar max-h-52 select-text">
+                      <div className={`p-2 space-y-1 overflow-y-auto custom-scrollbar ${isMaximized ? "max-h-96" : "max-h-52"} select-text`}>
                         {details && details.length > 0 ? (
                           details.map((col) => (
                             <div

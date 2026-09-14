@@ -210,17 +210,7 @@ export const SqlApp: React.FC = () => {
   const [inspectorHeight, setInspectorHeight] = useState(260);
 
   const handleToggleMaximizeInspector = useCallback(() => {
-    setIsInspectorMaximized((prev) => {
-      const next = !prev;
-      setInspectorHeight(
-        next
-          ? typeof window !== "undefined"
-            ? Math.round(window.innerHeight * 0.75)
-            : 580
-          : 260
-      );
-      return next;
-    });
+    setIsInspectorMaximized((prev) => !prev);
   }, []);
   const [showHints, setShowHints] = useState(false);
   const [appMode, setAppMode] = useState<"lab" | "cheatsheet">("lab");
@@ -1118,7 +1108,22 @@ export const SqlApp: React.FC = () => {
                 </div>
 
                 {/* Query Editor & Result Resizable Split */}
-                <div className="flex-1 min-h-0 w-full">
+                <div className="flex-1 min-h-0 w-full relative">
+                  {/* Maximized Inspector Overlay (Bounded exactly to workspace, zero clipping, fully visible scrollbar) */}
+                  {showInspector && isInspectorMaximized && (
+                    <div className="absolute inset-0 z-30 bg-slate-900 flex flex-col min-h-0 overflow-hidden shadow-2xl">
+                      <Inspector
+                        executionMs={executionMs}
+                        rowCount={userRows.length}
+                        explainPlan={explainPlan}
+                        schemaTables={schemaTables}
+                        isMaximized={true}
+                        onToggleMaximize={handleToggleMaximizeInspector}
+                        onClose={() => setShowInspector(false)}
+                      />
+                    </div>
+                  )}
+
                   <SplitPane
                     direction="vertical"
                     initialSize={220}
@@ -1212,8 +1217,9 @@ export const SqlApp: React.FC = () => {
                           direction="vertical"
                           initialSize={inspectorHeight}
                           minSize={120}
-                          maxSize={typeof window !== "undefined" ? Math.round(window.innerHeight * 0.85) : 800}
+                          maxSize={typeof window !== "undefined" ? Math.round(window.innerHeight * 0.7) : 500}
                           primary="second"
+                          onResize={setInspectorHeight}
                           firstPane={
                             <ResultTableViewer
                               userColumns={userColumns}
@@ -1229,13 +1235,13 @@ export const SqlApp: React.FC = () => {
                             />
                           }
                           secondPane={
-                            <div className="h-full w-full border-t border-slate-800 overflow-hidden">
+                            <div className="h-full w-full border-t border-slate-800 overflow-hidden flex flex-col min-h-0">
                               <Inspector
                                 executionMs={executionMs}
                                 rowCount={userRows.length}
                                 explainPlan={explainPlan}
                                 schemaTables={schemaTables}
-                                isMaximized={isInspectorMaximized}
+                                isMaximized={false}
                                 onToggleMaximize={handleToggleMaximizeInspector}
                                 onClose={() => setShowInspector(false)}
                               />
