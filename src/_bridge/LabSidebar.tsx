@@ -190,7 +190,7 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
       .map((m, idx) => ({ m, idx }))
       .filter(({ m }) => {
         // 1. Custom Questions Filter
-        if (filterCustom) {
+        if (filterCustom || activeFilter === "custom") {
           const isCustomMilestone =
             Boolean(m.isCustom) ||
             (m.tags && m.tags.some((t) => t.toLowerCase() === "custom")) ||
@@ -199,7 +199,7 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
         }
 
         // 2. Difficulty / Category Filter
-        if (activeFilter !== "all") {
+        if (activeFilter !== "all" && activeFilter !== "custom") {
           const cat = (m.category ?? m.difficulty ?? "").toLowerCase();
           if (cat !== activeFilter.toLowerCase()) return false;
         }
@@ -288,22 +288,6 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                 <Filter className="w-2.5 h-2.5 text-sky-400" />
                 Filter by
               </span>
-              {customMilestonesCount > 0 && (
-                <button
-                  type="button"
-                  data-test="custom-questions-toggle"
-                  onClick={() => setFilterCustom(!filterCustom)}
-                  title={filterCustom ? "Showing only your custom questions (click to clear)" : "Filter only your custom questions"}
-                  className={`text-[9px] px-1.5 py-0.2 rounded font-semibold border transition flex items-center gap-1 cursor-pointer shrink-0 ${
-                    filterCustom
-                      ? "bg-purple-900 text-purple-200 border-purple-500 shadow-xs"
-                      : "bg-purple-950/60 text-purple-300 border-purple-800/80 hover:bg-purple-900/60 hover:text-purple-100"
-                  }`}
-                >
-                  <span>★ Custom</span>
-                  <span className="font-mono text-[8px] opacity-80">({customMilestonesCount})</span>
-                </button>
-              )}
             </div>
             {(filterCustom || activeFilter !== "all" || selectedTags.length > 0 || searchQuery) && (
               <button
@@ -334,27 +318,35 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                   <select
                     id="difficulty-filter-select"
                     data-test="difficulty-select"
-                    value={activeFilter}
-                    onChange={(e) => setActiveFilter(e.target.value)}
-                    className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
+                    value={filterCustom ? "custom" : activeFilter}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "custom") {
+                        setFilterCustom(true);
+                        setActiveFilter("custom");
+                      } else {
+                        setFilterCustom(false);
+                        setActiveFilter(val);
+                      }
+                    }}
+                    className={`w-full text-[11px] border rounded px-2 py-1 pr-5 font-sans cursor-pointer transition appearance-none truncate ${
+                      activeFilter !== "all" || filterCustom
+                        ? "border-sky-500/80 bg-sky-950/30 text-sky-200 font-medium"
+                        : "bg-slate-950 border-slate-800 text-slate-200 hover:border-slate-700"
+                    }`}
                   >
                     <option value="all">
-                      All ({filterCustom ? customMilestonesCount : milestones.length})
+                      All ({milestones.length})
+                    </option>
+                    <option value="custom">
+                      ★ Custom ({customMilestonesCount})
                     </option>
                     {categories
                       .filter((cat) => cat !== "custom")
                       .map((cat) => {
                         const count = milestones.filter((m) => {
                           const catMatch = (m.category ?? m.difficulty ?? "").toLowerCase() === cat.toLowerCase();
-                          if (!catMatch) return false;
-                          if (filterCustom) {
-                            return (
-                              Boolean(m.isCustom) ||
-                              (m.tags && m.tags.some((t) => t.toLowerCase() === "custom")) ||
-                              (m.category ?? m.difficulty ?? "").toLowerCase() === "custom"
-                            );
-                          }
-                          return true;
+                          return catMatch;
                         }).length;
                         return (
                           <option key={cat} value={cat}>
@@ -387,9 +379,13 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                       if (val === "all") clearAllTags();
                       else updateSelectedTags([val]);
                     }}
-                    className="w-full text-[11px] bg-slate-950 border border-slate-800 rounded px-2 py-1 pr-5 text-slate-200 focus:outline-hidden focus:border-sky-500 font-sans cursor-pointer hover:border-slate-700 transition appearance-none truncate"
+                    className={`w-full text-[11px] border rounded px-2 py-1 pr-5 font-sans cursor-pointer transition appearance-none truncate ${
+                      selectedTags.length > 0
+                        ? "border-sky-500/80 bg-sky-950/30 text-sky-200 font-medium"
+                        : "bg-slate-950 border-slate-800 text-slate-200 hover:border-slate-700"
+                    }`}
                   >
-                    <option value="all">All Topics ({tagCounts.length})</option>
+                    <option value="all">All ({tagCounts.length})</option>
                     {tagCounts.map(({ tag, count }) => (
                       <option key={tag} value={tag}>
                         #{tag} ({count})
@@ -405,17 +401,20 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
           {/* Active Filter Badges */}
           {(filterCustom || activeFilter !== "all" || selectedTags.length > 0) && (
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
-              {filterCustom && (
+              {(filterCustom || activeFilter === "custom") && (
                 <button
-                  onClick={() => setFilterCustom(false)}
+                  onClick={() => {
+                    setFilterCustom(false);
+                    if (activeFilter === "custom") setActiveFilter("all");
+                  }}
                   title="Remove custom questions filter"
-                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/80 hover:bg-purple-900 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700/80 hover:bg-sky-900 transition cursor-pointer"
                 >
-                  <span>★ Custom</span>
-                  <X className="w-2.5 h-2.5 text-purple-400" />
+                  <span>★ Custom ({customMilestonesCount})</span>
+                  <X className="w-2.5 h-2.5 text-sky-400" />
                 </button>
               )}
-              {activeFilter !== "all" && (
+              {activeFilter !== "all" && activeFilter !== "custom" && (
                 <button
                   onClick={() => setActiveFilter("all")}
                   title="Remove difficulty filter"
@@ -430,10 +429,10 @@ export const LabSidebar: React.FC<LabSidebarProps> = ({
                   key={tag}
                   onClick={() => toggleTag(tag)}
                   title={`Remove #${tag} filter`}
-                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-700/80 hover:bg-purple-900 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700/80 hover:bg-sky-900 transition cursor-pointer"
                 >
                   <span>#{tag}</span>
-                  <X className="w-2.5 h-2.5 text-purple-400" />
+                  <X className="w-2.5 h-2.5 text-sky-400" />
                 </button>
               ))}
               {((filterCustom ? 1 : 0) + (activeFilter !== "all" ? 1 : 0) + selectedTags.length > 1) && (
